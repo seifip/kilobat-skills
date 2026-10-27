@@ -6,7 +6,7 @@ These thresholds are the ones Kilobat itself uses to compute `health` and `advic
 
 | Field | Meaning |
 |---|---|
-| `health` | `poor` if a captive portal is detected, the Wi-Fi signal is poor, or internet loss is 20% or more. `degraded` if the signal is degraded, router latency is above 20 ms, internet latency above 120 ms, DNS above 150 ms or jitter above 30 ms. `unknown` if the internet ping got no replies. Otherwise `good`. |
+| `health` | `poor` if a captive portal is detected, the Wi-Fi signal is poor, or internet loss is 20% or more. Otherwise `degraded` if the signal is degraded, router latency is above 20 ms, internet latency above 120 ms, DNS above 150 ms or jitter above 30 ms. If neither condition applies and internet ping has no average, `unknown`; otherwise `good`. A lack of ping replies does not by itself establish an outage. |
 | `advice` | Plain-language findings, one per detected issue. |
 | `signalScore` | 0–100, computed as `(rssi + 90) × 2`: −40 dBm scores 100, −65 dBm scores 50 and −90 dBm scores 0. `null` on Ethernet. |
 | `signalNoiseRatio` | `rssi − noise` in dB. Higher is better. |
@@ -64,7 +64,7 @@ Calls may stutter when idle latency is above 300 ms, jitter above 30 ms, loss ab
 
 ## `kilobat report --summary --json [--days N]`
 
-`downloadBytes` and `uploadBytes` totals, `daily[]` per calendar day and `topApps[]` (10 apps by bytes). History is recorded only while the Kilobat app is running, so gaps mean the app was closed, not that no data was used.
+`downloadBytes` and `uploadBytes` totals, `daily[]` per calendar day and `topApps[]` (10 apps by bytes). History is recorded while the Kilobat app is running; gaps can have several causes and do not establish that no data was used.
 
 ## `kilobat radar --json`
 

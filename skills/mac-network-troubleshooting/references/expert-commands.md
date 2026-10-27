@@ -19,7 +19,7 @@ Ask the user before running these; they change settings, touch other devices or 
 
 | Command | Effect |
 |---|---|
-| `kilobat dns automatic\|cloudflare\|google` | Changes system DNS with an administrator prompt. |
+| `kilobat dns <automatic, cloudflare or google>` | Changes system DNS with an administrator prompt. |
 | `kilobat dns flush` | Flushes the DNS cache with an administrator prompt. Harmless, but still needs approval. |
 | `kilobat lan-test <server>` | iperf3 test to another local machine running an iperf3 server. |
 | `kilobat discover <subnet>` | Scans hosts with nmap. Only on the user's own network. |

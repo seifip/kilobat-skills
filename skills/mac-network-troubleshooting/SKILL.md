@@ -1,6 +1,6 @@
 ---
 name: mac-network-troubleshooting
-description: Diagnose slow internet, Wi-Fi drops, high latency, DNS and per-app bandwidth on macOS using Kilobat. Use for troubleshooting unreliable connections, video calls, hotspots, data use or bufferbloat when the Kilobat CLI or MCP server is available.
+description: Troubleshoot slow internet, Wi-Fi drops, latency, DNS, bufferbloat and per-app bandwidth on macOS with Kilobat's CLI or MCP server. Use for unreliable connections, video calls, hotspots and data usage.
 ---
 
 # Mac network troubleshooting with Kilobat
@@ -47,10 +47,10 @@ Work from the Mac outward and stop at the first layer that fails. [references/re
 | Symptom in the JSON | Layer | What to tell the user |
 |---|---|---|
 | `captivePortal: true` | Network login | Open the network's login page in a browser, then retest. Nothing else is meaningful until then. |
-| `rssi` below −67 dBm, `signalNoiseRatio` below 25 or `signalScore` below 50 | Wi-Fi signal | Move closer to the router or remove obstructions. Suggest Radar (below). |
+| `rssi` below −65 dBm, `signalNoiseRatio` below 25 or `signalScore` below 50 | Wi-Fi signal | Move closer to the router or remove obstructions. Suggest Radar (below). |
 | `routerLatencyMs` above 20 or router loss | Local link | Wi-Fi congestion or a busy router. Check `scan` for crowded channels and `status` for heavy apps; restart the router last. |
 | Router fast, `internetLatencyMs` above 120 or internet loss of 5% or more | Internet path | The path to the test target may be slow or lossy; it does not identify the provider as the cause. Compare another target or network and retest. |
-| `internetJitterMs` above 30 | Unstable latency | Calls and games will stutter. Run a speed test to check bufferbloat. |
+| `internetJitterMs` above 30 | Unstable latency | Calls and games may stutter. Consider a speed test to check latency under load. |
 | `dnsMilliseconds` above 150 | DNS | Benchmark resolvers with `kilobat dns-benchmark`; offer to switch DNS (ask first). |
 | `internet.samples` empty | Inconclusive | Some networks block ping. Confirm with `kilobat http-check https://www.apple.com`. |
 | All good | Capacity or a specific app | Check `status`, then run a speed test. |
@@ -83,7 +83,7 @@ Each of these is a change: describe it and wait for a yes.
 
 ### 7. Report and verify
 
-Lead with the diagnosis and the evidence, for example: "Your Wi-Fi signal is fine (−52 dBm, SNR 40 dB) and the router answers in 3 ms, but internet latency is 180 ms with 8% loss, so the slowdown is upstream of your router." Then give at most three next steps, most likely first. After any change, run the same measurement again and report before and after.
+Lead with the evidence and its limits, for example: "Your Wi-Fi signal is strong (−52 dBm, SNR 40 dB) and the router answers in 3 ms, but the tested internet destination averaged 180 ms with 8% loss. Compare another target or network before attributing the cause." Then give at most three next steps, most likely first. After any change, run the same measurement again and report before and after.
 
 ## MCP tools
 
