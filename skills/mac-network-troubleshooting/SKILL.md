@@ -10,7 +10,7 @@ Kilobat is a macOS network utility. Its CLI (`kilobat`) measures Wi-Fi signal, r
 ## Setup
 
 1. Prefer the Kilobat MCP tools when they are connected (`diagnose_network`, `get_status`, …). They return the same JSON as the CLI. See the table at the end.
-2. Otherwise check for the CLI: `command -v kilobat`. Kilobat runs on macOS only. If it is missing, check https://kilobat.app for the current installation instructions; do not invent an install command or claim it is installed.
+2. Otherwise check for the CLI: `command -v kilobat`. Kilobat runs on macOS only. If it is missing, install it with `brew install seifip/kilobat/kilobat` (macOS 14+ and Xcode 16+ required); do not claim it is installed until the command succeeds.
 3. Pass `--json` to commands that support it; some expert commands already return JSON and do not accept that flag. Errors go to stderr and return a non-zero exit code.
 4. Use one-shot commands only. `status --watch` and `radar --watch` never exit; they are for the user's own Terminal.
 
