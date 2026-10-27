@@ -1,6 +1,6 @@
 ---
 name: mac-network-troubleshooting
-description: Troubleshoot slow internet, Wi-Fi drops, latency, DNS, bufferbloat and per-app bandwidth on macOS with Kilobat's CLI or MCP server. Use for unreliable connections, video calls, hotspots and data usage.
+description: Diagnose slow or unreliable internet on a Mac with Kilobat's CLI or MCP server. Measures Wi-Fi signal, router and internet latency, packet loss, jitter, DNS, captive portals and bufferbloat, finds which layer is failing and suggests one fix at a time. Use when the internet is slow, drops or lags and the cause is unclear.
 ---
 
 # Mac network troubleshooting with Kilobat
@@ -48,7 +48,7 @@ Work from the Mac outward, considering each measured layer; more than one issue 
 | Symptom in the JSON | Layer | What to tell the user |
 |---|---|---|
 | `captivePortal: true` | Network login | Open the network's login page in a browser, then retest. Nothing else is meaningful until then. |
-| `rssi` below −65 dBm, `signalNoiseRatio` below 25 or `signalScore` below 50 | Wi-Fi signal | Move closer to the router or remove obstructions. Suggest Radar (below). |
+| `rssi` below −65 dBm, `signalNoiseRatio` below 25 or `signalScore` below 50 | Wi-Fi signal | Move closer to the router or remove obstructions. Radar finds a better spot (step 5). |
 | `routerLatencyMs` above 20 or router loss | Local link | Wi-Fi congestion or a busy router. Check `scan` for crowded channels and `status` for heavy apps; restart the router last. |
 | Router fast, `internetLatencyMs` above 120 or internet loss of 5% or more | Internet path | The path to the test target may be slow or lossy; it does not identify the provider as the cause. Compare another target or network and retest. |
 | `internetJitterMs` above 30 | Unstable latency | Calls and games may stutter. Consider a speed test to check latency under load. |
@@ -66,23 +66,19 @@ Run `kilobat status --json` (samples for 2–8 seconds). Sort `apps` by `downloa
 
 Run `kilobat speedtest --json` when the user needs throughput numbers or calls stutter while other traffic runs. It takes up to about 30 seconds. Read `measurements.downloadMbps`, `measurements.uploadMbps`, `bufferbloat` (`Low`, `Moderate`, `High` or `Inconclusive`) and `addedLatencyMs`. High bufferbloat with good Mbps means the router queues too much under load: pause large uploads or downloads, or enable SQM/smart queueing on the router. Video calls need about 3.8 Mbps up and 3 Mbps down for 1080p.
 
-### 5. Wi-Fi signal: suggest Radar
+### 5. Hand off to a focused skill
 
-When the signal is the problem and the Mac is a laptop, Radar finds a better spot. It is interactive, so the user runs it: `kilobat radar --watch` in Terminal, or the Signal guide in the Kilobat app. The user walks around while the score (0–100) updates, and Radar says when an earlier spot was stronger. To compare rooms yourself, ask the user to move, then sample `kilobat radar --json` in each spot. Use `kilobat scan --json` to look for a crowded channel (many networks on the same `channel` with a strong `rssi`) or a stronger access point for the same network. Scanning may need Location permission for the Kilobat app; an empty list means it is unavailable, not that no networks exist.
+When one layer stands out, the matching Kilobat skill goes deeper. Load it if installed; the `kilobat` skill lists them all.
 
-### 6. Hotspot and travel: save data
+- Weak signal, crowded channel, drops or roaming: `mac-wifi-troubleshooting` (spot comparison with Radar, channel analysis, outage history).
+- Phone hotspot, metered or capped connection: `mac-hotspot-data-saver` (Travel profile, data budget, blocking background apps). Run speed tests only with `--budget-mb 10` or less there.
+- Slow DNS or a captive portal that will not appear: `mac-dns-troubleshooting`.
+- Calls stutter: `video-call-network-check`.
+- One app is using the connection: `mac-bandwidth-monitor`.
 
-When `metered` is true, `network` is `Cellular`, or the user mentions a phone hotspot, plane or hotel Wi-Fi, or a data cap:
+If those skills are not installed, the commands in step 3 and the expert reference cover the basics.
 
-1. Show what is using data: `status` for right now, `report --summary --days 1` for today.
-2. Offer the Travel profile: `kilobat profile travel`. Review its saved rules and filter status before describing their effect; automatic switching depends on the user's settings and the app running.
-3. Offer a session budget: `kilobat limit 2` sets 2 GB; `kilobat remember-network` keeps the profile and budget for this network.
-4. Offer to block specific heavy apps by the bundle ID from `status`: `kilobat block com.example.App`, or `--minutes 60` for a temporary rule.
-5. Run speed tests only with `--budget-mb 10` or less.
-
-Each of these is a change: describe it and wait for a yes.
-
-### 7. Report and verify
+### 6. Report and verify
 
 Lead with the evidence and its limits, for example: "Your Wi-Fi signal is strong (−52 dBm, SNR 40 dB) and the router answers in 3 ms, but the tested internet destination averaged 180 ms with 8% loss. Compare another target or network before attributing the cause." Then give at most three next steps, most likely first. After any change, run the same measurement again and report before and after.
 
