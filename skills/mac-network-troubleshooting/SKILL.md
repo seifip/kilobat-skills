@@ -39,10 +39,11 @@ Run `kilobat diagnose --json` (a few seconds). Read the top-level fields first:
 - `measurements`: radio (`rssi`, `noise`, `channel`, `band`, `transmitMbps`), `router` and `internet` ping samples with `lossPercent`, `dnsMilliseconds`, `dnsServers`, `captivePortal`, `networkService`.
 
 One sample is a snapshot. For "flaky" or "drops sometimes", run diagnose three times about 20 seconds apart and compare, and read `kilobat outages` and `kilobat speed-history` for earlier events.
+Treat missing or null measurements as unavailable, not zero or a passing result. Report what was actually measured and avoid naming a cause without corroboration.
 
 ### 2. Find the failing layer
 
-Work from the Mac outward and stop at the first layer that fails. [references/reading-results.md](references/reading-results.md) has every threshold and field.
+Work from the Mac outward, considering each measured layer; more than one issue may be present. [references/reading-results.md](references/reading-results.md) explains the fields and Kilobat's thresholds.
 
 | Symptom in the JSON | Layer | What to tell the user |
 |---|---|---|
