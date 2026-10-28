@@ -27,7 +27,7 @@ Background work on macOS often runs under system processes rather than the app's
 
 ## 2. Look back in time
 
-- `kilobat report --summary --json --days 7` returns `downloadBytes`, `uploadBytes`, `daily[]` (`day`, `downloadBytes`, `uploadBytes`) and `topApps[]` (10 apps by `bytes`). `--days` takes 1–30.
+- `kilobat report --summary --json --days 7` returns `downloadBytes`, `uploadBytes`, `daily[]` (`day`, `downloadBytes`, `uploadBytes`) and `topApps[]` (10 apps by `bytes`). `--days` takes 1–365 (the app keeps up to a year, set in Settings).
 - `kilobat report --csv --days N` exports one row per app per sample (`timestamp,app,download_bytes,upload_bytes,bytes`; the row with an empty `app` is the whole Mac) for a spreadsheet. `--json` without `--summary` gives raw samples, which can be large. Prefer `--summary` unless the user asks for raw data.
 
 Point out unusual days and compare the top apps with the live snapshot.
