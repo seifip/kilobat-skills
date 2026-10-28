@@ -1,6 +1,6 @@
 ---
 name: mac-dns-troubleshooting
-description: Diagnose and fix DNS on a Mac with Kilobat. Measures lookup time, benchmarks the system resolver against Cloudflare, Google and Quad9, switches or flushes DNS with the user's approval, and builds an encrypted DNS (DNS-over-HTTPS) profile. Use when pages are slow to start, sites fail with "server not found", a hotel or café login page won't appear, or the user asks which DNS is fastest.
+description: Diagnose and fix DNS on a Mac with Kilobat. Measures lookup time, benchmarks the system resolver against Cloudflare, Google and Quad9, switches DNS to Cloudflare, Google or Quad9 or flushes it with the user's approval, and builds an encrypted DNS (DNS-over-HTTPS) profile. Use when pages are slow to start, sites fail with "server not found", a hotel or café login page won't appear, or the user asks which DNS is fastest.
 ---
 
 # Mac DNS troubleshooting with Kilobat
@@ -9,7 +9,7 @@ DNS turns names into addresses before anything loads, so a slow or broken resolv
 
 ## Setup
 
-Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Measuring is safe. Changing or flushing DNS shows a macOS administrator prompt and needs a clear yes first. The `kilobat` skill lists the rules.
+Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Commands here need CLI 0.2 or later (`kilobat --version`); if one is unknown, suggest `brew upgrade kilobat`. Measuring is safe. Changing or flushing DNS shows a macOS administrator prompt and needs a clear yes first. The `kilobat` skill lists the rules.
 
 ## 1. Rule out a login page first
 
@@ -35,15 +35,15 @@ Run `kilobat dns-benchmark`. It prints JSON (no `--json` flag): one entry per re
 
 ## 4. Separate DNS from the site
 
-For "one site is slow", run `kilobat http-check https://example.com` with the site's URL. It prints cumulative timings: `DNS`, `Connect`, `TLS`, `First byte`, `Total`. A large `DNS` value points here; a large gap between `TLS` and `First byte` is the server, not DNS. Compare against a second site before blaming DNS.
+For "one site is slow", run `kilobat http-check https://example.com --json` with the site's URL. It returns the HTTP `status` and cumulative `dnsMs`, `connectMs`, `tlsMs`, `firstByteMs` and `totalMs`. A large `dnsMs` points here; a large gap between `tlsMs` and `firstByteMs` is the server, not DNS. Compare against a second site before blaming DNS.
 
 ## 5. Change DNS, with approval
 
 Name the change, the reason with numbers, and how to undo it, then wait for a yes.
 
-- `kilobat dns cloudflare` or `kilobat dns google` sets that provider on the active network service. `kilobat dns automatic` returns to the network's own DNS.
+- `kilobat dns cloudflare`, `kilobat dns google` or `kilobat dns quad9` sets that provider on the active network service. `kilobat dns automatic` returns to the network's own DNS.
 - `kilobat dns flush` clears the macOS DNS cache. It helps after a site moved or a stale "server not found"; it does not make DNS faster.
-- Quad9 and other providers cannot be set by the CLI. The user sets them in System Settings › Network › the service › Details › DNS.
+- Other providers cannot be set by the CLI. The user sets them in System Settings › Network › the service › Details › DNS, or uses an encrypted DNS profile (below).
 - Encrypted DNS: `kilobat dns-profile https://dns.example/dns-query > Kilobat-DNS.mobileconfig` writes a DNS-over-HTTPS configuration profile for the given HTTPS endpoint, for example `https://cloudflare-dns.com/dns-query` or `https://dns.quad9.net/dns-query`. The user reviews and installs it in System Settings; removing the profile restores the previous behavior.
 
 Things to warn about before changing:

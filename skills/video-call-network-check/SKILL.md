@@ -9,7 +9,7 @@ Calls fail differently from downloads. A connection with plenty of Mbps can stil
 
 ## Setup
 
-Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Steps 1–2 only read. The speed test in step 3 uses data and needs a yes; blocking in step 4 changes settings and needs a yes. The `kilobat` skill lists the rules.
+Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Commands here need CLI 0.2 or later (`kilobat --version`); if one is unknown, suggest `brew upgrade kilobat`. Steps 1–2 only read. The speed test in step 3 uses data and needs a yes; blocking in step 4 changes settings and needs a yes. The `kilobat` skill lists the rules.
 
 If a call is in progress, skip the speed test: it will disrupt the call.
 
@@ -40,7 +40,7 @@ Run `kilobat speedtest --json`. Read:
 - `addedLatencyMs`: how much latency rose while the line was busy. `null` means the test could not load the line long enough to tell.
 - `bufferbloat`: `Low` (under 15 ms added), `Moderate` (under 60), `High` (60 or more) or `Inconclusive`. Added latency above 100 ms makes calls stutter whenever anything else downloads or uploads.
 
-The JSON does not include a call verdict; work it out from these bandwidth tiers (download / upload, in Mbps):
+Kilobat's own verdicts are in the same JSON: `voiceCalls`, `videoCalls` (the highest of 1080p, 720p or SD the bandwidth supports) and `streaming`, each with "likely suitable" or "may stutter", plus `callWarnings` explaining any caution. Quote them. The bandwidth tiers behind them (download / upload, in Mbps):
 
 | Call quality | Download | Upload |
 |---|---|---|
@@ -49,7 +49,7 @@ The JSON does not include a call verdict; work it out from these bandwidth tiers
 | SD video | 0.6 | 1 |
 | Voice only | 0.1 | 0.1 |
 
-Name the highest tier the result meets, then lower the verdict to "may stutter" if any threshold from step 1 or the added latency is exceeded. For group calls with many video tiles, more download helps.
+For group calls with many video tiles, more download helps.
 
 ## 4. Recommend
 
@@ -61,4 +61,6 @@ Lead with the measurement that explains the symptom, then at most three fixes, m
 - High latency or loss beyond the router with good Wi-Fi: it is past the user's network. Suggest turning off video, switching to audio-only, or using a phone hotspot as a backup.
 - VPN on (`kilobat interfaces --json` lists VPN interfaces): latency includes the tunnel; try the call without it if allowed.
 
-After a change, run diagnose again and report before and after. `kilobat speed-history` lists earlier speed tests for comparison.
+- Latency spikes every minute or so on good Wi-Fi: often AWDL (AirDrop, Sidecar, Universal Control) scanning other channels. `kilobat low-latency on` pauses it for up to 15 minutes while the command runs, with an administrator prompt; the user runs it in their own Terminal during the call.
+
+After a change, run diagnose again and report before and after. `kilobat speed-history` lists earlier speed tests, and `kilobat health-history --hours 24` shows whether jitter or loss came and went during the day.

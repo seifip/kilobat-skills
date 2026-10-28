@@ -18,11 +18,13 @@ npx skills add seifip/kilobat-skills
 | [`video-call-network-check`](skills/video-call-network-check/SKILL.md) | Zoom, Meet, Teams and FaceTime quality: jitter, loss, bufferbloat, background uploads. |
 | [`mac-bandwidth-monitor`](skills/mac-bandwidth-monitor/SKILL.md) | Which apps use the connection, usage history and where each process connects. |
 
-The skills use Kilobat's CLI or its MCP server. Installing them does not install the CLI. To install the CLI on macOS 14 or newer, using Xcode 16 or newer:
+The skills use Kilobat's CLI (0.2 or later) or its MCP server. Installing them does not install the CLI. To install the CLI on macOS 14 or newer, using Xcode 16 or newer:
 
 ```sh
 brew install seifip/kilobat/kilobat
 ```
+
+Already installed? `brew upgrade kilobat`.
 
 Or connect the MCP server: `claude mcp add kilobat -- kilobat mcp`.
 

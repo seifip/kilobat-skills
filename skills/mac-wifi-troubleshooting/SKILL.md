@@ -9,13 +9,13 @@ This skill answers one question: is the Wi-Fi link itself the problem, and what 
 
 ## Setup
 
-Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Read commands below are safe to run. Ask before anything that changes settings; the `kilobat` skill lists the rules.
+Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Commands here need CLI 0.2 or later (`kilobat --version`); if one is unknown, suggest `brew upgrade kilobat`. Read commands below are safe to run. Ask before anything that changes settings; the `kilobat` skill lists the rules.
 
-Wi-Fi scans and network names need Location permission for the Kilobat app. An empty scan or a missing `ssid` means permission is missing, not that there are no networks; point the user to System Settings › Privacy & Security › Location Services.
+macOS shows Wi-Fi names only to apps with Location permission. The CLI gets them from the running Kilobat app; if the app is closed or lacks permission, `ssid` is null and scans list "Hidden network". Signal, channel and band still work. Point the user to `kilobat open`, or System Settings › Privacy & Security › Location Services for Kilobat.
 
 ## 1. Read the link
 
-Run `kilobat diagnose --json` and read `measurements.radio`:
+For the radio alone, `kilobat wifi status --json` is quickest: `ssid`, `rssi`, `noise`, `signalNoiseRatio`, `channel`, `band`, `transmitMbps` and `score`. `kilobat diagnose --json` adds router latency and loss; its `measurements.radio` has the same fields:
 
 | Field | Good | Degraded | Poor |
 |---|---|---|---|
@@ -39,7 +39,7 @@ Run `kilobat scan --json`. Each entry has `ssid`, `rssi`, `noise`, `channel`, `b
 - 80 or 160 MHz channels are faster but collide with more neighbors. In a crowded building 40 MHz on 5 GHz is often more stable.
 - The same `ssid` appearing on several channels means a mesh or extenders. Check that the Mac is on the strongest one.
 
-Suggest a quieter channel by name, for example "channel 36 has no strong neighbors, 44 has four". The change happens in the router's admin page; Kilobat cannot change it.
+Run `kilobat channels --json` for Kilobat's estimate: `band`, `current`, `recommended` and a `congestion` score per candidate channel (lower is better). Suggest a quieter channel by name, for example "channel 36 scores 56, your channel 44 scores 73". The change happens in the router's admin page; Kilobat cannot change it.
 
 ## 3. Find a better spot
 
@@ -47,7 +47,7 @@ When the signal is weak on a laptop, compare places instead of guessing.
 
 - Interactive: the user runs `kilobat radar --watch` in Terminal, or opens the Signal guide in the Kilobat app, and walks around. The score updates four times a second and says when an earlier spot was stronger.
 - Agent-driven: ask the user to move to each spot and say when they are there, then run `kilobat radar --json` once per spot. It returns `score`, `signalNoiseRatio` and `radio`. A difference of 10 points or more is meaningful; less is noise.
-- `kilobat spots` lists spots the user saved in the app, with their radio readings.
+- `kilobat spots save "<room>"` stores the current reading under a name (with approval); `kilobat spots` lists saved spots with their radio readings, so the user can compare rooms later or in the app.
 
 Report a ranked list of spots. If every spot in the room is poor, the router placement is the problem: suggest raising it, moving it out of cabinets and away from microwaves and thick walls, or adding a wired mesh node.
 
@@ -58,7 +58,7 @@ For "it disconnects sometimes", one sample is not enough.
 1. Run `kilobat outages`. Each event has `start`, `end`, `network`, `kind` and `detail`. `Unreachable` means both ping targets and an HTTPS check failed. `Wi-Fi roam` means the Mac moved to another access point. `Network changed` means it joined a different network.
 2. Many `Wi-Fi roam` events in a short time on a mesh mean the Mac is bouncing between nodes of similar strength. Moving a node or lowering its power often helps more than a stronger signal.
 3. `Unreachable` with a good signal at that time points past Wi-Fi, to the router or internet; hand over to `mac-network-troubleshooting`.
-4. Run `kilobat diagnose --json` three times about 20 seconds apart to see whether `rssi` or router loss swings.
+4. `kilobat health-history --hours 24 --json` shows the app's periodic checks (`rssi`, `routerMs`, `internetMs`, `jitterMs`, `lossPercent`, `dnsMs`, `health`) to see when quality dropped. For a live view, run `kilobat diagnose --json` three times about 20 seconds apart.
 5. `kilobat scan-history` shows earlier scans, to see whether neighbors changed.
 
 Outages are recorded only while the Kilobat app runs.
@@ -67,4 +67,4 @@ Outages are recorded only while the Kilobat app runs.
 
 Lead with the measurement, then at most three fixes, most likely first. For example: "Signal is −74 dBm with 18 dB SNR on 2.4 GHz channel 6, shared with five strong networks. 1) Move closer or use 5 GHz, 2) switch the router's 2.4 GHz to channel 1, which has one neighbor, 3) add a mesh node in the hallway." After a change, take the same measurement again and report before and after.
 
-Things the user can try on the Mac itself: forget and rejoin the network, turn Wi-Fi off and on, and check for a VPN (`kilobat interfaces --json` lists VPN interfaces). Ethernet is the fastest way to tell a Wi-Fi problem from everything else.
+Things to try on the Mac itself, with approval: `kilobat wifi restart` (Wi-Fi off and on), rejoining with `kilobat wifi join "<name>"`, and checking for a VPN (`kilobat interfaces --json` lists VPN interfaces). `kilobat wifi known` lists saved networks in order of preference; a stale network high on the list can make the Mac join the wrong one. Restarting or rejoining drops the connection for a few seconds, which can cut off a remote session. Ethernet is the fastest way to tell a Wi-Fi problem from everything else.

@@ -25,7 +25,7 @@ Ask first, naming the exact change:
 - `dns <provider>` and `dns flush`: change system settings and show a macOS administrator prompt. Record the current resolvers first and offer to restore `automatic` if it does not help.
 - `capture`, `discover`, `wake`, `blocklist`, `connection-rule`, `scope`: expert tools. Use them only when the user asks.
 
-Kilobat saves rules; blocking only happens while the Kilobat app runs with its network filter enabled. The CLI cannot verify that (`filteringActive` is `null`), so say "saved", not "blocked".
+Kilobat saves rules; blocking only happens while the Kilobat app runs with its network filter enabled. `status --json` reports `filteringActive` when the app is running; unless it is `true`, say "saved", not "blocked".
 
 ## Workflow
 
@@ -38,7 +38,7 @@ Run `kilobat diagnose --json` (a few seconds). Read the top-level fields first:
 - `signalScore` (0–100), `signalNoiseRatio` (dB), `routerLatencyMs`, `internetLatencyMs`, `internetJitterMs`.
 - `measurements`: radio (`rssi`, `noise`, `channel`, `band`, `transmitMbps`), `router` and `internet` ping samples with `lossPercent`, `dnsMilliseconds`, `dnsServers`, `captivePortal`, `networkService`.
 
-One sample is a snapshot. For "flaky" or "drops sometimes", run diagnose three times about 20 seconds apart and compare, and read `kilobat outages` and `kilobat speed-history` for earlier events.
+One sample is a snapshot. For "flaky" or "drops sometimes", run diagnose three times about 20 seconds apart and compare, and read `kilobat health-history --hours 24 --json`, `kilobat outages --days 7` and `kilobat speed-history` for earlier events. These need CLI 0.2 or later; if a command is unknown, suggest `brew upgrade kilobat`.
 Treat missing or null measurements as unavailable, not zero or a passing result. Report what was actually measured and avoid naming a cause without corroboration.
 
 ### 2. Find the failing layer
@@ -53,6 +53,7 @@ Work from the Mac outward, considering each measured layer; more than one issue 
 | Router fast, `internetLatencyMs` above 120 or internet loss of 5% or more | Internet path | The path to the test target may be slow or lossy; it does not identify the provider as the cause. Compare another target or network and retest. |
 | `internetJitterMs` above 30 | Unstable latency | Calls and games may stutter. Consider a speed test to check latency under load. |
 | `dnsMilliseconds` above 150 | DNS | Benchmark resolvers with `kilobat dns-benchmark`; offer to switch DNS (ask first). |
+| Wi-Fi fine but one channel is crowded | Channel | `kilobat channels --json` names the least crowded channel to set on the router. |
 | `internet.samples` empty | Inconclusive | Some networks block ping. Confirm with `kilobat http-check https://www.apple.com`. |
 | All good | Capacity or a specific app | Check `status`, then run a speed test. |
 
@@ -91,10 +92,14 @@ Lead with the evidence and its limits, for example: "Your Wi-Fi signal is strong
 | `scan_wifi` | `kilobat scan --json` | No |
 | `run_speedtest` (`budget_mb`) | `kilobat speedtest --json --budget-mb N` | No, but uses data |
 | `get_usage_report` (`days`) | `kilobat report --summary --json --days N` | No |
+| `get_wifi`, `suggest_wifi_channel` | `kilobat wifi status --json`, `channels --json` | No |
+| `get_network_history` (`kind`, `days`) | `kilobat outages`, `speed-history`, `health-history --json` | No |
+| `benchmark_dns`, `check_url` | `kilobat dns-benchmark`, `http-check <URL> --json` | No |
 | `list_rules` | `kilobat rules --json` | No |
 | `set_profile` | `kilobat profile <name>` | Yes, ask first |
 | `set_app_rule` | `kilobat allow` or `block <app> [--minutes N]` | Yes, ask first |
-| `set_dns` | `kilobat dns <provider>` | Yes, ask first |
+| `set_budget` | `kilobat limit <GB>` | Yes, ask first |
+| `set_dns` (incl. `flush`) | `kilobat dns <provider>` | Yes, ask first |
 
 To connect the server, add `kilobat mcp` as a stdio MCP server, for example `claude mcp add kilobat -- kilobat mcp`.
 

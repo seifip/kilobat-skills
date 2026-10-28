@@ -47,6 +47,8 @@ The weaker of the two decides. A low `transmitMbps` with a good RSSI points to i
 | `measurements.transferredBytes` | Data used by the test. |
 | `addedLatencyMs` | Loaded latency minus idle latency. `null` if the test could not load the link for at least 2 seconds or the idle ping was unreliable. |
 | `bufferbloat` | `Low` under 15 ms added, `Moderate` under 60 ms, `High` at 60 ms or more, `Inconclusive` without a reliable `addedLatencyMs`. |
+| `voiceCalls`, `videoCalls`, `streaming` | Kilobat's verdicts, such as `1080p · likely suitable` or `720p · may stutter`. |
+| `callWarnings` | Why a call verdict says "may stutter", for example high jitter or delay under load. |
 
 Calls may stutter when idle latency is above 300 ms, jitter above 30 ms, loss above 2% or added latency above 100 ms. Bandwidth needs for video calls: 1080p about 3 Mbps down and 3.8 up, 720p 1.8 and 2.6, SD 0.6 and 1. Streaming: 4K about 15 Mbps, 1080p 5, 720p 3.
 
@@ -60,7 +62,9 @@ Calls may stutter when idle latency is above 300 ms, jitter above 30 ms, loss ab
 | `downloadBytesPerSecond`, `uploadBytesPerSecond` | Whole-Mac rates over the last sample. |
 | `sessionBytes` | Bytes since this command started sampling. Use `report` for history. |
 | `apps[]` | `id` (bundle ID or `process:<name>`), `name`, per-app rates, `sessionBytes`, `allowedRule` (the saved rule, not proof of enforcement). |
-| `filteringActive` | Always `null` from the CLI; check the Kilobat app for filter status. |
+| `processIDs` | Process IDs behind each app, for `destinations --pid` or `quit`. |
+| `filteringActive` | `true` or `false` from the running Kilobat app; `null` when the app is not running. |
+| `ssid`, `sessionBudgetGB`, `budgetUsed` | From the running app: the network name, this network's budget and the share used (0–1). |
 
 ## `kilobat report --summary --json [--days N]`
 

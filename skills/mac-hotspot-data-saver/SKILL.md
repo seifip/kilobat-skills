@@ -9,9 +9,9 @@ A Mac on a phone hotspot behaves as if it were on home broadband: cloud sync, ph
 
 ## Setup
 
-Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Reading is safe; every change below needs a clear yes from the user. The `kilobat` skill lists the rules.
+Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Commands here need CLI 0.2 or later (`kilobat --version`); if one is unknown, suggest `brew upgrade kilobat`. Reading is safe; every change below needs a clear yes from the user. The `kilobat` skill lists the rules.
 
-Blocking and budgets are saved by the CLI and enforced by the Kilobat app with its network filter enabled (Kilobat Pro). Without it, rules are saved but nothing is stopped. The CLI cannot see the filter, so say "saved" and ask the user to confirm the filter is on in the app.
+Blocking and budgets are saved by the CLI and enforced by the Kilobat app with its network filter enabled (Kilobat Pro). Without it, rules are saved but nothing is stopped. `kilobat doctor` says whether the app is running and the filter is on; say "saved", not "blocked", unless it is.
 
 ## 1. Confirm the connection is metered
 
@@ -30,19 +30,23 @@ History is recorded only while the Kilobat app runs, so gaps do not prove nothin
 
 ## 3. Offer the Travel profile
 
-Travel is Kilobat's "only the essentials" profile. Each profile keeps its own rules, and `rules`, `allow` and `block` act on the active profile only. Apps without a rule follow the app's "Allow new apps by default" setting, which is off unless the user turned it on.
+Travel is Kilobat's "only the essentials" profile. Each profile keeps its own rules. Apps without a rule follow the "new-apps" setting (`kilobat settings new-apps`), which is `block` unless the user changed it. Build the allow list before switching, so nothing the user needs is cut off in between:
 
-1. Run `kilobat rules --json`. If `profile` is already `travel`, its `rules` and `defaultAllow` show what is allowed; skip to step 3.
-2. Otherwise, explain that Travel may block everything without an allow rule, including apps in use right now, and ask to switch: `kilobat profile travel`. Then run `kilobat rules --json` to see Travel's rules.
-3. From what the user is doing and the `id` values in `status`, propose a short allow list, for example the browser, Slack and Zoom: `kilobat allow com.tinyspeck.slackmacgap`. Save the ones the user approves.
+1. Run `kilobat rules --json --profile travel` to see Travel's `rules` and `defaultAllow`, and whether it is already `active`.
+2. From what the user is doing and the `id` values in `status`, propose a short allow list, for example the browser, Slack and Zoom. Save the approved ones to Travel without switching: `kilobat allow com.tinyspeck.slackmacgap --profile travel`.
+3. Then, with approval: `kilobat profile travel`.
 
-The Kilobat app can switch to Travel automatically on metered networks ("Switch to Travel on metered networks" in Profiles, on by default). Mention it rather than assuming it is on.
+To undo one rule later: `kilobat reset <id> --profile travel`.
+
+The Kilobat app can switch to Travel automatically on metered networks. Check with `kilobat settings auto-travel` and offer `kilobat settings auto-travel on` (with approval) if it is off.
 
 ## 4. Set a budget
 
 `kilobat limit <GB>` sets the session budget (0.1 to 10000 GB; `kilobat limit` reads it). With the filter on, once the budget is used up Kilobat stops new connections in the Travel and Work profiles; in Unrestricted it only tracks usage. Suggest a number from the user's plan, for example 2 GB for a day of tethering.
 
-`kilobat remember-network` saves the current profile and budget for this network, so Kilobat applies them the next time the Mac joins it.
+`kilobat remember-network` saves the current profile and budget for this network, so Kilobat applies them the next time the Mac joins it. `kilobat networks` lists networks with their remembered profile and budget; `kilobat networks forget <name>` drops them.
+
+`status --json` includes `budgetUsed` (0–1) and `filteringActive` when the Kilobat app is running. If `filteringActive` is false, the budget and rules are saved but nothing is stopped.
 
 ## 5. Block specific apps
 
