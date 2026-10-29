@@ -32,9 +32,13 @@ Background work on macOS often runs under system processes rather than the app's
 
 Point out unusual days and compare the top apps with the live snapshot.
 
+For one app over time, `kilobat bandwidth "<app name>" day --json` (or `hour`, `week`, `month`; `--back 1` is the previous period) returns `sentBytes`, `receivedBytes`, `peakBytesPerSecond` with `peakAt`, and `buckets[]` with sent and received per minute, hour, six hours or day. Use the names from `topApps`; helpers count under the app that owns them. Omit the app for the whole Mac. History from before Kilobat 1.2 has no sent/received split per app, so it is estimated from the whole Mac's ratio; say so when it matters.
+
 ## 3. See where an app connects
 
-`kilobat destinations --json --pid <PID>` lists that process's open sockets: `pid`, `process`, `transport`, `endpoint` (local -> remote address and port) and `state`. Take the PID from `processIDs` in step 1, or omit `--pid` to see every process. Remote addresses are IPs; say which service they probably belong to only when the hostname or a reverse lookup supports it.
+`kilobat destinations --json --pid <PID>` lists that process's open sockets: `pid`, `process`, `transport`, `endpoint` (local -> remote address and port) and `state`. Take the PID from `processIDs` in step 1, or omit `--pid` to see every process. Remote addresses are IPs; say which service they probably belong to only when the hostname or a reverse lookup supports it. The Kilobat app's Connections map shows each address's registration country; CDN and VPN addresses show their owner's country, not where the server stands.
+
+`kilobat access-policy <bundle-id> --json` shows what the app's developer says it connects to and why (`connections[]` with `hosts`, `purpose`, `denyConsequences`, `essential`), when the app ships an Internet Access Policy (`declared` is false otherwise). Use it to tell expected traffic from surprises.
 
 ## 4. Check an unknown process
 
@@ -44,6 +48,7 @@ When the user does not recognize a process, run `kilobat signature <PID>`. It pr
 
 - Pause the app from its own settings, for example sync or auto-update options.
 - Quit it: `kilobat quit <PID>` asks it to quit; `--force` kills it. Only for a process the user named or agreed to stop; unsaved work may be lost.
+- Block one destination instead of the whole app: `kilobat block-host <domain|IP> --app <id>`; see `mac-app-firewall`.
 - Temporarily block it: `kilobat block <id> --minutes 60`, using the `id` from `status`. Without `--minutes` the rule stays until `kilobat allow <id>`. Rules belong to the current profile; in the Unrestricted profile everything is allowed, so blocking needs Travel or Work.
 - Rules are enforced only by the Kilobat app with its network filter on (Kilobat Pro). Otherwise they are saved, not applied; say so.
 

@@ -1,6 +1,6 @@
 ---
 name: kilobat
-description: Entry point for Kilobat, the macOS network utility with a CLI and MCP server. Read first for any Mac network task, such as slow internet, Wi-Fi problems, DNS, video calls, hotspot data, per-app bandwidth, a site or API that won't connect, or keeping the Mac awake for a long agent run. Holds setup, safety rules and which focused skill to load.
+description: Entry point for Kilobat, the macOS network utility with a CLI and MCP server. Read first for any Mac network task, such as slow internet, Wi-Fi problems, DNS, video calls, hotspot data, per-app bandwidth, blocking apps or domains, approving new apps, a site or API that won't connect, or keeping the Mac awake for a long agent run. Holds setup, safety rules and which focused skill to load.
 ---
 
 # Kilobat
@@ -19,6 +19,7 @@ Pick by what the user describes. A task may need more than one skill; load them 
 | Pages slow to start, "server not found", which DNS is fastest, changing DNS, encrypted DNS, captive portal not appearing | `mac-dns-troubleshooting` |
 | Zoom, Meet, Teams or FaceTime stutters, robotic audio, frozen video, check before a call | `video-call-network-check` |
 | Which app uses the internet, background uploads, usage per app or per day, unknown connections | `mac-bandwidth-monitor` |
+| Block or allow an app, a domain or an IP; approve apps that are asking to connect; what an app is supposed to connect to | `mac-app-firewall` |
 | Keep the Mac awake for a long build, download or agent run; did the agent finish or stall; is now a good time for a big download | `mac-agent-runs` |
 | One site, API or app can't connect while others work | `kilobat why <url\|host>` or `diagnose_connection` first, then `mac-network-troubleshooting` if more is wrong |
 
@@ -31,7 +32,7 @@ If the matching skill is not installed, install the set with `npx skills add sei
 3. Otherwise check for the CLI: `command -v kilobat`. If it is missing, ask before installing it with `brew install seifip/kilobat/kilobat`. Do not claim it is installed until the command succeeds.
 4. To connect the MCP server, add `kilobat mcp` as a stdio server, for example `claude mcp add kilobat -- kilobat mcp`.
 5. `kilobat doctor` reports whether the Kilobat app is running, whether its network filter is on, and whether Kilobat Pro is active.
-6. This set of skills targets CLI 0.4 (`kilobat --version`); `awake`, `sessions`, `why` and `conditions` need 0.4. If a command is unknown, the CLI is older: suggest `brew upgrade kilobat`, and use `kilobat --help` to find the older equivalent.
+6. This set of skills targets CLI 0.5 (`kilobat --version`); `awake`, `sessions`, `why` and `conditions` need 0.4, and `bandwidth`, `access-policy`, `approvals`, `approve`, `deny`, `block-host` and `unblock-host` need 0.5. If a command is unknown, the CLI is older: suggest `brew upgrade kilobat`, and use `kilobat --help` to find the older equivalent.
 
 ## Conventions
 
@@ -44,12 +45,13 @@ If the matching skill is not installed, install the set with `npx skills add sei
 
 ## Safety: read freely, ask before changing
 
-Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `scan`, `channels`, `radar --json`, `wifi status`, `wifi known`, `report`, `health-history`, `networks`, `rules`, `settings` with no value, `profile`, `limit` and `dns` with no argument, `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `spots`, `scan-history`, `doctor`.
+Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `scan`, `channels`, `radar --json`, `wifi status`, `wifi known`, `report`, `health-history`, `networks`, `rules`, `settings` with no value, `profile`, `limit` and `dns` with no argument, `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `spots`, `scan-history`, `doctor`, `bandwidth`, `access-policy`, `approvals`, `blocked-history`.
 
 Name the exact change and wait for a yes before:
 
 - `speedtest`: uses up to 80 MB. On a metered network pass `--budget-mb 10` or less, or skip it.
-- `profile <name>`, `allow`/`block`/`reset <app>`, `limit <GB>`, `remember-network`, `networks forget`, `settings <name> <value>`: change saved settings.
+- `profile <name>`, `allow`/`block`/`reset <app>`, `limit <GB>`, `remember-network`, `networks forget`, `settings <name> <value>`, `block-host`/`unblock-host`: change saved settings.
+- `approve`/`deny <app>`: answer an app waiting to connect, which also saves a rule. Show the user its signer and destinations first.
 - `wifi on|off|restart|disconnect|join`: change the connection. Turning Wi-Fi off or joining another network can cut off a remote session.
 - `wifi password` and `wifi share`: reveal a saved password after a macOS prompt. Only when the user asks for it.
 - `quit <PID>`: quits a process. `low-latency on`: pauses AirDrop and AWDL while it runs, with an administrator prompt.
@@ -85,7 +87,12 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Allow, block or reset an app | `kilobat allow\|block\|reset <app> [--minutes N] [--profile name]` | `set_app_rule` |
 | Data budget | `kilobat limit <GB>` | `set_budget` |
 | Read, set or flush DNS | `kilobat dns [automatic\|cloudflare\|google\|quad9\|flush]` | `set_dns` |
-| Settings such as new-app default and auto Travel | `kilobat settings [name value]` | — |
+| Settings such as new-app mode (allow, ask, block) and auto Travel | `kilobat settings [name value]` | `set_new_app_mode` for new apps |
+| One app's traffic over an hour, day, week or month | `kilobat bandwidth <app> day --json` | `get_app_bandwidth` |
+| What an app's developer says it connects to | `kilobat access-policy <bundle-id> --json` | `get_access_policy` |
+| Apps waiting to connect, and answering them | `kilobat approvals --json`, `approve\|deny <app>` | `list_approvals`, `decide_approval` |
+| Block a domain, IP or range | `kilobat block-host <target> [--app <id>]` | `block_destination` |
+| What the filter blocked recently | `kilobat blocked-history` | `list_blocked_connections` |
 | Metered, Low Data Mode, VPN, battery and heat, with advice | `kilobat conditions --json` | `get_conditions` |
 | Why one site, API or app can't connect | `kilobat why <url\|host> [--app <id>] --json` | `diagnose_connection` |
 | Keep the Mac awake for a run or a command | `kilobat awake --for 90m`, `awake --until-quiet`, `awake -- <command>` | `keep_awake`, `release_awake` |

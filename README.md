@@ -17,9 +17,10 @@ npx skills add seifip/kilobat-skills
 | [`mac-dns-troubleshooting`](skills/mac-dns-troubleshooting/SKILL.md) | Slow lookups, resolver benchmarks, switching or flushing DNS, encrypted DNS, captive portals. |
 | [`video-call-network-check`](skills/video-call-network-check/SKILL.md) | Zoom, Meet, Teams and FaceTime quality: jitter, loss, bufferbloat, background uploads. |
 | [`mac-bandwidth-monitor`](skills/mac-bandwidth-monitor/SKILL.md) | Which apps use the connection, usage history and where each process connects. |
+| [`mac-app-firewall`](skills/mac-app-firewall/SKILL.md) | Block or allow apps, domains and IPs; ask about new apps and answer them; what an app declares it connects to. |
 | [`mac-agent-runs`](skills/mac-agent-runs/SKILL.md) | Long AI agent runs, builds and downloads: keep the Mac awake, check conditions, see how a run ended. |
 
-The skills use Kilobat's CLI (0.2 or later) or its MCP server. Installing them does not install the CLI. To install the CLI on macOS 14 or newer, using Xcode 16 or newer:
+The skills use Kilobat's CLI (0.5 or later for every command) or its MCP server. Installing them does not install the CLI. To install the CLI on macOS 14 or newer, using Xcode 16 or newer:
 
 ```sh
 brew install seifip/kilobat/kilobat
