@@ -41,4 +41,4 @@ Before blocking a domain an app needs, check `kilobat access-policy <bundle-id> 
 
 ## 6. Check it worked
 
-New connections follow the rule; an existing connection can continue until it reconnects. `kilobat blocked-history` (MCP `list_blocked_connections`) shows what the filter blocked, with the `reason` (app rule, blocklist entry, connection rule, budget, default deny or blocked when asked). `kilobat why <host> --app <id> --json` explains why one app can or can't reach a host, including Kilobat's own rules.
+New connections follow the rule; an existing connection can continue until it reconnects. `kilobat blocked-history` (MCP `list_blocked_connections`) shows what the filter blocked, with the `reason` (app rule, blocklist entry, connection rule, budget, default deny, blocked when asked, or "Updater paused on a metered network" for an updater helper on a hotspot; see `mac-hotspot-data-saver`). `kilobat why <host> --app <id> --json` explains why one app can or can't reach a host, including Kilobat's own rules.

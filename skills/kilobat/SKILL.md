@@ -19,6 +19,7 @@ Pick by what the user describes. A task may need more than one skill; load them 
 | Pages slow to start, "server not found", which DNS is fastest, changing DNS, encrypted DNS, captive portal not appearing | `mac-dns-troubleshooting` |
 | Zoom, Meet, Teams or FaceTime stutters, robotic audio, frozen video, check before a call | `video-call-network-check` |
 | Which app uses the internet, background uploads, usage per app or per day, unknown connections | `mac-bandwidth-monitor` |
+| The router, ISP or carrier shows more (or less) data than Kilobat | `mac-bandwidth-monitor`, "When a router or provider shows a different total" |
 | Block or allow an app, a domain or an IP; approve apps that are asking to connect; what an app is supposed to connect to | `mac-app-firewall` |
 | Keep the Mac awake for a long build, download or agent run; did the agent finish or stall; is now a good time for a big download | `mac-agent-runs` |
 | One site, API or app can't connect while others work | `kilobat why <url\|host>` or `diagnose_connection` first, then `mac-network-troubleshooting` if more is wrong |
@@ -45,7 +46,7 @@ If the matching skill is not installed, install the set with `npx skills add sei
 
 ## Safety: read freely, ask before changing
 
-Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `scan`, `channels`, `radar --json`, `wifi status`, `wifi known`, `report`, `health-history`, `networks`, `rules`, `settings` with no value, `profile`, `limit` and `dns` with no argument, `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `spots`, `scan-history`, `doctor`, `bandwidth`, `access-policy`, `approvals`, `blocked-history`.
+Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `scan`, `channels`, `radar --json`, `wifi status`, `wifi known`, `report`, `health-history`, `networks`, `rules`, `settings` with no value, `profile`, `limit` and `dns` with no argument, `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `spots`, `scan-history`, `doctor`, `bandwidth`, `access-policy`, `approvals`, `blocked-history`, `stutter` (sends pings only), `airdrop` with no argument, `bluetooth`.
 
 Name the exact change and wait for a yes before:
 
@@ -54,11 +55,11 @@ Name the exact change and wait for a yes before:
 - `approve`/`deny <app>`: answer an app waiting to connect, which also saves a rule. Show the user its signer and destinations first.
 - `wifi on|off|restart|disconnect|join`: change the connection. Turning Wi-Fi off or joining another network can cut off a remote session.
 - `wifi password` and `wifi share`: reveal a saved password after a macOS prompt. Only when the user asks for it.
-- `quit <PID>`: quits a process. `low-latency on`: pauses AirDrop and AWDL while it runs, with an administrator prompt.
+- `quit <PID>`: quits a process. `low-latency on [--for 15m|1h|2h] [--until-quit <app>]`: pauses AirDrop and AWDL while it runs (4 hours at most), with an administrator prompt; the user runs it in their own Terminal. `airdrop everyone|contacts|off`: opens System Settings for the user to change AirDrop visibility.
 - `dns <provider>`, `dns flush`: change system settings behind a macOS administrator prompt. Record the current resolvers first.
 - `capture`, `discover`, `wake`, `lan-test`, `blocklist`, `connection-rule`, `domain-exception`, `scope`: expert tools; only when the user asks for them.
 
-Keeping the Mac awake (`keep_awake`, `kilobat awake`) is low risk: it changes no settings and only stops idle sleep; closing the lid still sleeps the Mac. Tell the user for how long, ask first on battery, and release the hold when the work is done. Never change sleep settings with `pmset`.
+Keeping the Mac awake (`keep_awake`, `kilobat awake`) is low risk: it changes no settings and only stops idle sleep; closing the lid still sleeps the Mac. Tell the user for how long, ask first on battery, and release the hold when the work is done. Running with the lid closed (`lid_closed`, `--lid-closed`) works only after the user allowed it in Kilobat Settings, and a closed Mac in a bag can overheat or run flat: get the user's explicit confirmation every time (see `mac-agent-runs`). Never change sleep settings with `pmset`.
 
 Before a large download or upload (more than a few hundred MB) or a long unattended run, check `get_conditions` (`kilobat conditions --json`). On a metered connection or in Low Data Mode, ask first.
 
@@ -77,7 +78,10 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Least crowded channel | `kilobat channels --json` | `suggest_wifi_channel` |
 | One signal sample (score 0–100) | `kilobat radar --json` | — |
 | Speed and bufferbloat | `kilobat speedtest --json [--budget-mb N]` | `run_speedtest` |
+| Latency spikes and whether they repeat | `kilobat stutter --json [--target router\|internet]` | `run_stutter_test` |
+| AirDrop link and its users, AirDrop visibility, Bluetooth on 2.4 GHz | `kilobat airdrop --json`, `bluetooth --json` | `get_nearby_radios`, `set_airdrop_visibility` |
 | Usage history | `kilobat report --summary --json --days N` | `get_usage_report` |
+| A router's or provider's figure beside Kilobat's for the same period | `kilobat report compare --total 40GB --period last-month --json` | `compare_usage` |
 | Drops, past speed tests, health over time | `kilobat outages`, `speed-history`, `health-history --json` | `get_network_history` |
 | Resolver comparison, one site's timing | `kilobat dns-benchmark`, `http-check <URL> --json` | `benchmark_dns`, `check_url` |
 | Sockets per process, local devices, route | `kilobat destinations --json`, `devices --json`, `trace <host>` | `list_connections`, `list_devices`, `trace_route` |
@@ -94,8 +98,10 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Block a domain, IP or range | `kilobat block-host <target> [--app <id>]` | `block_destination` |
 | What the filter blocked recently | `kilobat blocked-history` | `list_blocked_connections` |
 | Metered, Low Data Mode, VPN, battery and heat, with advice | `kilobat conditions --json` | `get_conditions` |
+| Updaters paused on metered networks, update bytes that got through, apps that update inside themselves | `kilobat updaters --json`, `updaters on\|off` | `get_updaters`, `set_updater_pause` |
 | Why one site, API or app can't connect | `kilobat why <url\|host> [--app <id>] --json` | `diagnose_connection` |
 | Keep the Mac awake for a run or a command | `kilobat awake --for 90m`, `awake --until-quiet`, `awake -- <command>` | `keep_awake`, `release_awake` |
+| Keep it awake only while the user reads or presents in one app | `kilobat awake --while-frontmost <app> [--display]`, in the user's Terminal | None; it is the user's, not an agent's |
 | Earlier awake sessions and AI agent runs | `kilobat sessions --json [--days N]` | `list_sessions` |
 
 Run `kilobat --help` for the full list, including expert tools.
