@@ -27,7 +27,7 @@ Commands need CLI 0.5 (`kilobat --version`); if one is unknown, suggest `brew up
 
 With `new-apps` set to `ask`, `kilobat approvals --json` (MCP `list_approvals`) lists waiting apps: `app` (the rule key), `process`, `path`, `signer`, `signatureValid`, `requests`, `waiting` and `destinations` (`host`, `address`, `port`). It needs the Kilobat app running.
 
-Present each app with who signed it and where it wants to go, then let the user decide. `kilobat approve <app>` or `kilobat deny <app>` (MCP `decide_approval`) releases or drops the held connections and saves the rule in the current profile; `--minutes N` decides for a while only. Never approve an app whose signature isn't valid, or one the user doesn't recognize, without saying so plainly.
+Present each app with who signed it and where it wants to go, then let the user decide. `kilobat deny <app>` (MCP `decide_approval` with `block`) drops the held connections and saves a block rule in the current profile at once; `--minutes N` blocks for a while only. `kilobat approve <app>` doesn't allow anything by itself: Kilobat opens its approval window on that app, marked as requested from the command line, and the person confirms it there (`confirming: true`). Tell the user to look for it. Never encourage allowing an app whose signature isn't valid, or one the user doesn't recognize.
 
 ## 4. Block or allow a whole app
 
