@@ -9,13 +9,15 @@ A Mac on a phone hotspot behaves as if it were on home broadband: cloud sync, ph
 
 ## Setup
 
-Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Commands here need CLI 0.2 or later (`kilobat --version`); if one is unknown, suggest `brew upgrade kilobat`. Reading is safe; every change below needs a clear yes from the user. The `kilobat` skill lists the rules.
+Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew install seifip/kilobat/kilobat`, macOS 14+; ask before installing). Commands here need CLI 0.2 or later, and `conditions` and `sessions` need 0.4 (`kilobat --version`); if one is unknown, suggest `brew upgrade kilobat`. Reading is safe; every change below needs a clear yes from the user. The `kilobat` skill lists the rules.
 
 Blocking and budgets are saved by the CLI and enforced by the Kilobat app with its network filter enabled (Kilobat Pro). Without it, rules are saved but nothing is stopped. `kilobat doctor` says whether the app is running and the filter is on; say "saved", not "blocked", unless it is.
 
 ## 1. Confirm the connection is metered
 
 Run `kilobat status --json`. `metered: true` means macOS marks the connection as expensive, which is typical for a phone hotspot. `network: "Cellular"` is the same. Plane, hotel and roaming Wi-Fi often are not marked; take the user's word for it.
+
+`get_conditions` (`kilobat conditions --json`) answers the same question faster, without sampling traffic: `metered`, `lowDataMode` (the Low Data Mode switch for this network), `vpn` and battery. Check it before any large download or upload you are about to start yourself, such as a model, a container image or a dependency install, and ask first when `metered` or `lowDataMode` is true.
 
 Do not run a speed test on a metered connection unless the user wants one. If they do, use `--budget-mb 10` or less.
 
@@ -25,6 +27,8 @@ Do not run a speed test on a metered connection unless the user wants one. If th
 - Today: `kilobat report --summary --json --days 1` gives `downloadBytes`, `uploadBytes` and `topApps` (10 apps by bytes). Use `--days 7` to compare with a normal week.
 
 Name the top apps in plain words, with their `id`. Common culprits on macOS: iCloud Drive and Photos sync, Software Update, App Store downloads, Dropbox, Google Drive, OneDrive, browser updaters, game launchers and cloud backups. Uploads count too; a photo library sync can use more than browsing.
+
+AI coding agents: `kilobat sessions --json --days 1` (MCP: `list_sessions`) lists each Claude Code, Codex or other agent run the app recorded, with `received`, `sent` and bytes per helper process in `apps` (npm, git, pip and the like). Agents that install dependencies or pull images can use gigabytes; on a hotspot, suggest pausing those until the user is back on their usual network.
 
 History is recorded only while the Kilobat app runs, so gaps do not prove nothing was used.
 

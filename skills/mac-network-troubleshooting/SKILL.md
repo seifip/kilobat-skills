@@ -1,6 +1,6 @@
 ---
 name: mac-network-troubleshooting
-description: Diagnose slow or unreliable internet on a Mac with Kilobat's CLI or MCP server. Measures Wi-Fi signal, router and internet latency, packet loss, jitter, DNS, captive portals and bufferbloat, finds which layer is failing and suggests one fix at a time. Use when the internet is slow, drops or lags and the cause is unclear.
+description: Diagnose slow or unreliable internet on a Mac with Kilobat's CLI or MCP server. Measures Wi-Fi signal, router and internet latency, packet loss, jitter, DNS, captive portals and bufferbloat, finds which layer is failing and suggests one fix at a time. Use when the internet is slow, drops or lags and the cause is unclear, or when one site, API or app can't connect.
 ---
 
 # Mac network troubleshooting with Kilobat
@@ -16,7 +16,7 @@ Kilobat is a macOS network utility. Its CLI (`kilobat`) measures Wi-Fi signal, r
 
 ## Safety: read freely, ask before changing
 
-Read-only, run without asking: `diagnose`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`.
+Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`.
 
 Ask first, naming the exact change:
 
@@ -28,6 +28,17 @@ Ask first, naming the exact change:
 Kilobat saves rules; blocking only happens while the Kilobat app runs with its network filter enabled. `status --json` reports `filteringActive` when the app is running; unless it is `true`, say "saved", not "blocked".
 
 ## Workflow
+
+### One site, API or app can't connect
+
+When the internet works but one destination fails ("this app can't connect", "the agent can't reach the API", a timeout or certificate error), start with the doctor: `kilobat why <url|host> --json` (MCP: `diagnose_connection` with `target`). It needs CLI 0.4 or later. Pass `--app <id>` (MCP: `app`) with the `id` from `status` when one app is affected, so its Kilobat rules are checked too.
+
+It walks the layers in order and stops at the first that failed: `Network`, `VPN & proxy`, `DNS`, `Kilobat rules` (blocklist, app and connection rules, data budget), `Connection` (TCP), then `Secure connection` or `Request`, and `Server` (the HTTP answer). Each step has `status` (`ok`, `warning`, `failed`, `skipped`) and `detail`; `verdict` and `next` say what it means and what to do, and `ok` is false (exit 1) when a layer failed. Quote them.
+
+- A `Kilobat rules` failure means Kilobat itself blocks it. Offer the specific allow rule or blocklist change, with approval.
+- A `Server` warning such as 401, 403, 404 or 429 means the network is fine; the request needs a login, a key, another path or a slower pace.
+- All layers pass but the app still fails: the problem is inside the app or its environment, such as its own proxy setting, a sandbox, a container or a remote machine. This check runs on this Mac only.
+- A failure at `Network`, `DNS` or `Connection` for several sites: continue with step 1.
 
 ### 1. Measure the connection
 
@@ -93,6 +104,7 @@ Lead with the evidence and its limits, for example: "Your Wi-Fi signal is strong
 | `run_speedtest` (`budget_mb`) | `kilobat speedtest --json --budget-mb N` | No, but uses data |
 | `get_usage_report` (`days`) | `kilobat report --summary --json --days N` | No |
 | `get_wifi`, `suggest_wifi_channel` | `kilobat wifi status --json`, `channels --json` | No |
+| `diagnose_connection` (`target`, `app`) | `kilobat why <target> --json [--app <id>]` | No |
 | `get_network_history` (`kind`, `days`) | `kilobat outages`, `speed-history`, `health-history --json` | No |
 | `benchmark_dns`, `check_url` | `kilobat dns-benchmark`, `http-check <URL> --json` | No |
 | `list_rules` | `kilobat rules --json` | No |
