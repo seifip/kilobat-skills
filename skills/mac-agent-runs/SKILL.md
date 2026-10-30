@@ -18,7 +18,7 @@ Kilobat stops idle sleep. Closing the lid still sleeps the Mac unless the user t
 Call `get_conditions` (CLI: `kilobat conditions --json`, about 2 seconds). Read:
 
 - `metered` (hotspot or a network marked expensive) and `lowDataMode`: ask before downloading or uploading more than a few hundred MB, and prefer smaller artifacts or a later time.
-- `vpn` and `vpnInterface`: some hosts are blocked or slower through a VPN.
+- `vpn`, `vpnInterface` and `vpnName`: the default route goes through a VPN, so some hosts are blocked or slower. `vpnConnected` lists VPNs macOS reports connected, which may carry only some destinations (Tailscale without an exit node, say).
 - `internetLatencyMs` and `internetLossPercent`: high loss means retries and timeouts; `null` means the ping went unanswered, not that the internet is down.
 - `power`: `onAC`, `batteryPercent`, `thermal` (`nominal` to `critical`) and `lowPowerMode`. On battery below about 25%, suggest plugging in before a long run.
 - `keptAwake` and `awakeReasons`: whether Kilobat (the app, the CLI or this MCP server) already keeps the Mac awake.
@@ -34,6 +34,7 @@ Pick the narrowest form:
 - Until transfers finish: `kilobat awake --until-quiet` ends once the Mac stays below 16 KB/s for 3 minutes (`--quiet 1…60` minutes). `--app <id>` watches one app, using the `id` from `kilobat status --json`.
 - `--display` keeps the screen on too; only when the user wants to watch.
 - For the user's own reading or presenting, not an agent's work: `kilobat awake --while-frontmost <app> [--display] [--for 2h]` keeps the Mac awake only while that app (its name, such as Keynote, or bundle ID) is in front, lets it sleep when the user switches away, and ends when the app quits or at 20% battery. It follows macOS's app-switch events and never fakes input. Suggest it for the user's Terminal; the app's teacup has it as While an App Is in Front. There is no MCP tool for it, and it never ends an agent run or another awake session.
+- If the user wants the Mac awake whenever it's plugged in: the app's Stay awake while plugged in setting, `kilobat settings awake-on-power on` (it changes a saved setting, so ask first). Unplugging ends only the session plugging in started, never an agent run or a hold of yours. `get_conditions` reports it as `awakeOnPower`; don't rely on it for a run, since the user may unplug.
 
 Plain `kilobat awake` runs until Ctrl-C, so suggest it for the user's own Terminal. From an agent, prefer `awake -- <command>`, `--for` or `keep_awake`, which end on their own.
 

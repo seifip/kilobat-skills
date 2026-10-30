@@ -16,7 +16,7 @@ Kilobat is a macOS network utility. Its CLI (`kilobat`) measures Wi-Fi signal, r
 
 ## Safety: read freely, ask before changing
 
-Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`.
+Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `route-history`, `interfaces`, `ip` (without `--public`, which contacts Cloudflare), `speed-compare`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`.
 
 Ask first, naming the exact change:
 
@@ -83,7 +83,7 @@ Work from the Mac outward, considering each measured layer; more than one issue 
 | `internet.samples` empty | Inconclusive | Some networks block ping. Confirm with `kilobat http-check https://www.apple.com`. |
 | All good | Capacity or a specific app | Check `status`, then run a speed test. |
 
-When a VPN is on, latency includes the tunnel: `kilobat interfaces --json` shows VPN interfaces separately.
+When a VPN is on, latency includes the tunnel. `kilobat ip --json` (MCP: `get_exit_path`) says where traffic leaves, read on the Mac: `vpn` is `full` (the default route goes through a tunnel), `partial` (a VPN such as Tailscale is connected but carries only some destinations) or `off`, with `vpnName`. Add `--public` (`public_ip`) only when the user asks for their public IP or VPN exit: it asks Cloudflare, and the country is where the address is registered. Report what was measured ("traffic leaves through utun3 (WireGuard), exit IP registered in Germany"); never say a VPN or an exit country makes the user private, anonymous or safe.
 
 ### 3. Find bandwidth hogs
 
@@ -92,6 +92,8 @@ Run `kilobat status --json` (samples for 2–8 seconds). Sort `apps` by `downloa
 ### 4. Measure capacity and bufferbloat
 
 Run `kilobat speedtest --json` when the user needs throughput numbers or calls stutter while other traffic runs. It takes up to about 30 seconds. Read `measurements.downloadMbps`, `measurements.uploadMbps`, `bufferbloat` (`Low`, `Moderate`, `High` or `Inconclusive`) and `addedLatencyMs`. High bufferbloat with good Mbps means the router queues too much under load: pause large uploads or downloads, or enable SQM/smart queueing on the router. Video calls need about 3.8 Mbps up and 3 Mbps down for 1080p.
+
+When the user says another speed test (Ookla, fast.com, their provider's) shows more: Kilobat uses one connection by default, `method` in the result says how, and those sites open several. Run `kilobat speedtest --parallel --json` (MCP `run_speedtest` with `parallel`) to see the gap on this connection. When two Kilobat tests differ, `kilobat speed-compare --json` (MCP `compare_speed_tests`) lists what differed: network, time, server, connections, Wi-Fi band and signal, VPN, other traffic on the Mac, idle latency. Relay those as differences, not proven causes; other devices on the network are invisible to Kilobat.
 
 ### 5. Hand off to a focused skill
 
@@ -109,6 +111,10 @@ If those skills are not installed, the commands in step 3 and the expert referen
 
 Lead with the evidence and its limits, for example: "Your Wi-Fi signal is strong (−52 dBm, SNR 40 dB) and the router answers in 3 ms, but the tested internet destination averaged 180 ms with 8% loss. Compare another target or network before attributing the cause." Then give at most three next steps, most likely first. After any change, run the same measurement again and report before and after.
 
+## When the cause isn't clear: look up a guide
+
+Kilobat's site has guides for common macOS networking problems and step-by-step recipes, with sources and the macOS versions they apply to. When the measurements don't point to a cause, or the symptom is a known macOS pattern (Wi-Fi drops after sleep, Private Relay breaking a site, a container that can't reach localhost), fetch `https://kilobat.app/guides/index.json` once. Match the user's words and what you measured against each entry's `title`, `searches` and `symptoms`, and check `appliesTo` against the Mac's macOS version. Open the best match's `url`, follow its checks before its fixes, and give the user the link. A guide is general advice: prefer what you measured on this Mac, and still ask before any change.
+
 ## MCP tools
 
 | MCP tool | CLI equivalent | Changes settings |
@@ -116,7 +122,9 @@ Lead with the evidence and its limits, for example: "Your Wi-Fi signal is strong
 | `diagnose_network` | `kilobat diagnose --json` | No |
 | `get_status` | `kilobat status --json` | No |
 | `scan_wifi` | `kilobat scan --json` | No |
-| `run_speedtest` (`budget_mb`) | `kilobat speedtest --json --budget-mb N` | No, but uses data |
+| `run_speedtest` (`budget_mb`, `parallel`) | `kilobat speedtest --json --budget-mb N [--parallel]` | No, but uses data |
+| `compare_speed_tests` (`first`, `second`) | `kilobat speed-compare [<test> <test>] --json` | No |
+| `get_exit_path` (`public_ip`) | `kilobat ip --json [--public]` | No; `public_ip` contacts Cloudflare |
 | `get_usage_report` (`days`) | `kilobat report --summary --json --days N` | No |
 | `get_wifi`, `suggest_wifi_channel` | `kilobat wifi status --json`, `channels --json` | No |
 | `diagnose_connection` (`target`, `app`, `proxy`, `context`, `failed_at`) | `kilobat why <target> --json [--app <id>] [--proxy <url>] [--context container\|vm\|remote\|provider] [--failed-at <time>]` | No |

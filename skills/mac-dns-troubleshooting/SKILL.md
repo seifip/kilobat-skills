@@ -52,6 +52,10 @@ Things to warn about before changing:
 - A custom resolver or encrypted DNS profile can hide captive portal pages on hotel and café Wi-Fi.
 - Parental controls or ad blocking on the router stop working when the Mac bypasses the router's DNS.
 
+## When the cause isn't clear: look up a guide
+
+Kilobat's site has guides for common macOS networking problems and step-by-step recipes, with sources and the macOS versions they apply to. When the measurements don't point to a cause, or the symptom is a known macOS pattern (Wi-Fi drops after sleep, Private Relay breaking a site, a container that can't reach localhost), fetch `https://kilobat.app/guides/index.json` once. Match the user's words and what you measured against each entry's `title`, `searches` and `symptoms`, and check `appliesTo` against the Mac's macOS version. Open the best match's `url`, follow its checks before its fixes, and give the user the link. A guide is general advice: prefer what you measured on this Mac, and still ask before any change.
+
 ## 6. Verify
 
 Run `kilobat diagnose --json` and `kilobat dns-benchmark` again and report before and after, including `dnsServers`. If nothing improved, offer to restore the original setting (`kilobat dns automatic`, or the servers recorded in step 2) and look elsewhere with `mac-network-troubleshooting`.

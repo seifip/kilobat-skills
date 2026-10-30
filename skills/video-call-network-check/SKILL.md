@@ -78,7 +78,7 @@ Lead with the measurement that explains the symptom, then at most three fixes, m
 - High bufferbloat: the router's queue fills under load. Turn on SQM, Smart Queue or QoS in the router if it has it, or keep big transfers off during calls.
 - Weak Wi-Fi or high router latency: move closer, use 5 GHz, or plug in Ethernet.
 - High latency or loss beyond the router with good Wi-Fi: it is past the user's network. Suggest turning off video, switching to audio-only, or using a phone hotspot as a backup.
-- VPN on (`kilobat interfaces --json` lists VPN interfaces): latency includes the tunnel; try the call without it if allowed.
+- VPN on (`kilobat ip --json` says `vpn` full when the default route goes through it, partial when it carries only some destinations): latency includes the tunnel; try the call without it if allowed. `kilobat speed-compare --json` shows whether an earlier, better test ran without it.
 
 - Periodic spikes on the router: try pausing AWDL (AirDrop, Sidecar, Universal Control). In the Kilobat app (Pro), Health › Stutter test › Compare with low-latency on runs the test again with it paused and says whether it helped. From the CLI, the user runs `kilobat low-latency on --for 1h` or `--until-quit <app>` (the call or game) in their own Terminal during the call; it asks for administrator approval, lasts 4 hours at most, and restores on expiry, when that app quits, on Ctrl-C or a network change. Run `kilobat stutter` in another window before and during the pause and compare. If the spikes stay, AWDL isn't the cause; say so and restore it with `kilobat low-latency off`.
 

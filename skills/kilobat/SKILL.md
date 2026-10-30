@@ -26,6 +26,8 @@ Pick by what the user describes. A task may need more than one skill; load them 
 
 If the matching skill is not installed, install the set with `npx skills add seifip/kilobat-skills`, or follow the rules below and `kilobat <command> --help`.
 
+For a problem none of these skills covers, or a macOS quirk, `https://kilobat.app/guides/index.json` lists Kilobat's guides with their symptoms, the macOS versions they apply to and the commands they use; open the matching guide's `url` and follow it.
+
 ## Setup
 
 1. Kilobat runs on macOS 14 or later only.
@@ -46,11 +48,12 @@ If the matching skill is not installed, install the set with `npx skills add sei
 
 ## Safety: read freely, ask before changing
 
-Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `scan`, `channels`, `radar --json`, `wifi status`, `wifi known`, `report`, `health-history`, `networks`, `rules`, `settings` with no value, `profile`, `limit` and `dns` with no argument, `dns-benchmark`, `http-check`, `trace`, `interfaces`, `destinations`, `devices`, `outages`, `speed-history`, `spots`, `scan-history`, `doctor`, `bandwidth`, `access-policy`, `approvals`, `blocked-history`, `stutter` (sends pings only), `airdrop` with no argument, `bluetooth`.
+Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `scan`, `channels`, `radar --json`, `wifi status`, `wifi known`, `report`, `health-history`, `networks`, `rules`, `settings` with no value, `profile`, `limit` and `dns` with no argument, `dns-benchmark`, `http-check`, `trace`, `route-history`, `interfaces`, `ip` (without `--public`), `speed-compare`, `destinations`, `devices`, `outages`, `speed-history`, `spots`, `scan-history`, `doctor`, `bandwidth`, `access-policy`, `approvals`, `blocked-history`, `stutter` (sends pings only), `airdrop` with no argument, `bluetooth`.
 
 Name the exact change and wait for a yes before:
 
 - `speedtest`: uses up to 80 MB. On a metered network pass `--budget-mb 10` or less, or skip it.
+- `ip --public` (`get_exit_path` with `public_ip`): asks Cloudflare for the public IP. Only when the user wants their public IP or VPN exit; report the registry country as registry data, and never say a VPN or a country makes them private or anonymous.
 - `profile <name>`, `allow`/`block`/`reset <app>`, `limit <GB>`, `remember-network`, `networks forget`, `settings <name> <value>`, `block-host`/`unblock-host`: change saved settings.
 - `approve`/`deny <app>`: answer an app waiting to connect, which also saves a rule. Show the user its signer and destinations first.
 - `wifi on|off|restart|disconnect|join`: change the connection. Turning Wi-Fi off or joining another network can cut off a remote session.
@@ -77,7 +80,9 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Nearby networks and channels | `kilobat scan --json` | `scan_wifi` |
 | Least crowded channel | `kilobat channels --json` | `suggest_wifi_channel` |
 | One signal sample (score 0–100) | `kilobat radar --json` | — |
-| Speed and bufferbloat | `kilobat speedtest --json [--budget-mb N]` | `run_speedtest` |
+| Speed and bufferbloat, one connection or four (`--parallel`) | `kilobat speedtest --json [--budget-mb N] [--parallel]` | `run_speedtest` |
+| What differed between two speed tests | `kilobat speed-compare --json` | `compare_speed_tests` |
+| Where traffic leaves: VPN full, split or off, and the public IP when asked | `kilobat ip --json [--public]` | `get_exit_path` |
 | Latency spikes and whether they repeat | `kilobat stutter --json [--target router\|internet]` | `run_stutter_test` |
 | AirDrop link and its users, AirDrop visibility, Bluetooth on 2.4 GHz | `kilobat airdrop --json`, `bluetooth --json` | `get_nearby_radios`, `set_airdrop_visibility` |
 | Usage history | `kilobat report --summary --json --days N` | `get_usage_report` |
@@ -85,6 +90,8 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Drops, past speed tests, health over time | `kilobat outages`, `speed-history`, `health-history --json` | `get_network_history` |
 | Resolver comparison, one site's timing | `kilobat dns-benchmark`, `http-check <URL> --json` | `benchmark_dns`, `check_url` |
 | Sockets per process, local devices, route | `kilobat destinations --json`, `devices --json`, `trace <host>` | `list_connections`, `list_devices`, `trace_route` |
+| A route over time, hop by hop like mtr | `kilobat trace <host> --rounds 3`, `route-history --host <host> --json` | `trace_route` (`rounds`), `get_route_history` |
+| Throughput to a device on the LAN running `iperf3 -s` (ask first) | `kilobat lan-test <host> --json` | `run_lan_test` |
 | Networks and their remembered settings | `kilobat networks --json` | `list_networks` |
 | A profile's rules | `kilobat rules --json [--profile name]` | `list_rules` |
 | Select a profile | `kilobat profile travel\|work\|unrestricted` | `set_profile` |
@@ -102,6 +109,7 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Why one site, API or app can't connect | `kilobat why <url\|host> [--app <id>] --json` | `diagnose_connection` |
 | Keep the Mac awake for a run or a command | `kilobat awake --for 90m`, `awake --until-quiet`, `awake -- <command>` | `keep_awake`, `release_awake` |
 | Keep it awake only while the user reads or presents in one app | `kilobat awake --while-frontmost <app> [--display]`, in the user's Terminal | None; it is the user's, not an agent's |
+| Keep it awake whenever it's plugged in (the user's setting; ask first) | `kilobat settings awake-on-power on` (the screen follows `kilobat settings keep-screen-on`) | None; `get_conditions` reports `awakeOnPower` |
 | Earlier awake sessions and AI agent runs | `kilobat sessions --json [--days N]` | `list_sessions` |
 
 Run `kilobat --help` for the full list, including expert tools.

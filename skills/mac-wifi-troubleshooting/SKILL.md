@@ -72,6 +72,10 @@ When the signal is fine but games, calls or remote desktops lag in bursts, look 
 - To test AWDL as the cause, the user runs `kilobat low-latency on --for 15m` in their own Terminal (administrator prompt; 4 hours at most with `--for`, or `--until-quit <app>`), then `kilobat stutter` again. Fewer spikes with the pause means AWDL contributes; the same spikes mean it doesn't. `kilobat low-latency off` restores it.
 - `kilobat bluetooth --json` lists Bluetooth devices. Bluetooth uses 2.4 GHz; when `wifiBand` is 2.4 GHz and headphones, a keyboard or a mouse are connected (`sharesBand`), suggest a 5 GHz network. The Kilobat app's Wi-Fi menu shows the same tag and a shortcut to a known 5 GHz network.
 
+## When the cause isn't clear: look up a guide
+
+Kilobat's site has guides for common macOS networking problems and step-by-step recipes, with sources and the macOS versions they apply to. When the measurements don't point to a cause, or the symptom is a known macOS pattern (Wi-Fi drops after sleep, Private Relay breaking a site, a container that can't reach localhost), fetch `https://kilobat.app/guides/index.json` once. Match the user's words and what you measured against each entry's `title`, `searches` and `symptoms`, and check `appliesTo` against the Mac's macOS version. Open the best match's `url`, follow its checks before its fixes, and give the user the link. A guide is general advice: prefer what you measured on this Mac, and still ask before any change.
+
 ## 6. Recommend
 
 Lead with the measurement, then at most three fixes, most likely first. For example: "Signal is −74 dBm with 18 dB SNR on 2.4 GHz channel 6, shared with five strong networks. 1) Move closer or use 5 GHz, 2) switch the router's 2.4 GHz to channel 1, which has one neighbor, 3) add a mesh node in the hallway." After a change, take the same measurement again and report before and after.
