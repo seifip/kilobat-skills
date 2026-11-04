@@ -1,0 +1,10 @@
+{
+  "name": "kilobat",
+  "version": "0.1.0",
+  "mcpServers": {
+    "kilobat": {
+      "command": "kilobat",
+      "args": ["mcp"]
+    }
+  }
+}

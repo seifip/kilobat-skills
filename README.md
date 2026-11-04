@@ -28,6 +28,16 @@ brew install seifip/kilobat/kilobat
 
 Already installed? `brew upgrade kilobat`.
 
+### Gemini CLI extension
+
+After installing the Kilobat CLI, install this repository as a Gemini CLI extension:
+
+```sh
+gemini extensions install https://github.com/seifip/kilobat-skills
+```
+
+The extension makes the skills available and connects the local MCP server using `kilobat mcp`. It does not install Kilobat: `kilobat` must be on Gemini CLI's PATH. Check the connection with `gemini mcp list`. Some features need the companion Mac app, macOS permissions or a Pro license. The CLI is GPL-3.0-only; the separate desktop app is proprietary with free features and optional paid Pro.
+
 Or connect the MCP server: `claude mcp add kilobat -- kilobat mcp`.
 
 See the [documentation](https://kilobat.app/docs.html#network-troubleshooting-skill) or the [skills on skills.sh](https://skills.sh/seifip/kilobat-skills).
