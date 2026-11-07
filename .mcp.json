@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "kilobat": {
-      "command": "kilobat",
-      "args": ["mcp"]
-    }
-  }
-}

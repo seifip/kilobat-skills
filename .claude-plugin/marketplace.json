@@ -1,17 +1,13 @@
 {
   "name": "kilobat",
-  "owner": {
-    "name": "Kilobat",
-    "url": "https://kilobat.app"
-  },
-  "metadata": {
-    "description": "Kilobat's network diagnostics for coding agents on a Mac."
-  },
+  "owner": { "name": "Kilobat", "email": "ping@kilobat.app" },
+  "metadata": { "description": "Kilobat network tools for Claude Code." },
   "plugins": [
     {
       "name": "kilobat",
       "source": "./",
-      "description": "Network diagnostics for coding agents on a Mac: Kilobat's skills and MCP server."
+      "description": "Kilobat MCP server and Mac network troubleshooting skills.",
+      "category": "productivity"
     }
   ]
 }
