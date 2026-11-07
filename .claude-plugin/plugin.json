@@ -1,7 +1,7 @@
 {
   "name": "kilobat",
-  "version": "0.3.0",
-  "description": "Diagnose slow or flaky internet on a Mac: per-app traffic, Wi-Fi signal, latency, DNS and speed tests. Adds the Kilobat MCP server and nine network troubleshooting skills. Requires the kilobat CLI (brew install seifip/kilobat/kilobat).",
+  "version": "0.4.0",
+  "description": "Diagnose slow or flaky internet on a Mac: per-app traffic, Wi-Fi signal, latency, DNS and speed tests. Adds the Kilobat MCP server and ten skills, including setup. Requires the kilobat CLI (brew install seifip/kilobat/kilobat).",
   "author": {
     "name": "Kilobat",
     "email": "ping@kilobat.app",
