@@ -4,7 +4,7 @@ Agent Skills that teach AI agents to troubleshoot a Mac's network with [Kilobat]
 
 ## Claude Code plugin
 
-The skills and Kilobat's MCP server in one install:
+All the skills in one install. The `kilobat-setup` skill installs the CLI and can connect Kilobat's MCP server:
 
 ```sh
 claude plugin marketplace add seifip/kilobat-skills
