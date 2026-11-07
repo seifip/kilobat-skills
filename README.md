@@ -22,6 +22,7 @@ npx skills add seifip/kilobat-skills
 | Skill | Use it for |
 |---|---|
 | [`kilobat`](skills/kilobat/SKILL.md) | Start here. Setup, safety rules and which skill fits the question. |
+| [`kilobat-setup`](skills/kilobat-setup/SKILL.md) | Install or update the Kilobat CLI with Homebrew, connect the MCP server and run the first check. |
 | [`mac-network-troubleshooting`](skills/mac-network-troubleshooting/SKILL.md) | Slow or unreliable internet with an unclear cause: finds the failing layer. |
 | [`mac-wifi-troubleshooting`](skills/mac-wifi-troubleshooting/SKILL.md) | Weak or dropping Wi-Fi, crowded channels, the best spot for the Mac or router, mesh roaming. |
 | [`mac-hotspot-data-saver`](skills/mac-hotspot-data-saver/SKILL.md) | Phone hotspots, roaming and data caps: what uses data, the Essentials profile (Travel before Kilobat 1.35), budgets. |
@@ -40,5 +41,7 @@ brew install seifip/kilobat/kilobat
 Already installed? `brew upgrade kilobat`.
 
 Or connect the MCP server: `claude mcp add kilobat -- kilobat mcp`.
+
+[Privacy and network behaviour](PRIVACY.md) · [Security](SECURITY.md) · GPL-3.0.
 
 See the [documentation](https://kilobat.app/agents) or the [skills on skills.sh](https://skills.sh/seifip/kilobat-skills).
