@@ -8,10 +8,6 @@
     "url": "https://kilobat.app"
   },
   "homepage": "https://kilobat.app",
-  "documentationUrl": "https://kilobat.app/llms.txt",
-  "supportUrl": "https://kilobat.app/support.html",
-  "privacyPolicyUrl": "https://kilobat.app/privacy.html",
-  "termsOfServiceUrl": "https://kilobat.app/terms.html",
   "repository": "https://github.com/seifip/kilobat-skills",
   "license": "GPL-3.0-only",
   "keywords": [
