@@ -89,7 +89,7 @@ If every layer passes, the problem is inside the agent's environment: a sandbox,
 
 Hooks tell Kilobat what traffic can only guess: which project a run belongs to, when it waits for the user and when it is done. Each hook runs `kilobat agent-event`, which prints nothing, returns at once and always exits 0, so it can't break the agent. If the app isn't running, events wait in a small file it reads on launch. It needs a CLI that lists `agent-event` in `kilobat --help`. Show the user the snippet and ask before editing their settings; merge with hooks they already have rather than replacing them. `kilobat agent-event start --agent claude --verbose` explains what it did, for a test by hand.
 
-**Claude Code**, in `~/.claude/settings.json`. Claude Code passes each hook a JSON object on stdin with `session_id`, `cwd` and `hook_event_name`, which `--stdin-json` reads: SessionStart starts the run, UserPromptSubmit marks it working, Notification (a permission or input prompt) waiting, Stop done (or still working while background tasks run), StopFailure failed, or waiting when it is a rate limit, and SessionEnd done.
+**Claude Code**, in `~/.claude/settings.json`. Claude Code gives each hook a JSON object on stdin with `session_id`, `cwd` and `hook_event_name`, which `--stdin-json` reads: SessionStart starts the run, UserPromptSubmit marks it working, Notification (a permission or input prompt) waiting, Stop done (or still working while background tasks run), StopFailure failed, or waiting when it is a rate limit, and SessionEnd done.
 
 ```json
 {
@@ -123,7 +123,7 @@ For waiting too, use Codex hooks in `~/.codex/hooks.json` instead; they get the 
 }
 ```
 
-**Gemini CLI**, in `~/.gemini/settings.json`. Its hooks also pass JSON on stdin; BeforeAgent marks a turn working, AfterAgent done, and a ToolPermission notification waiting. Gemini CLI runs as `node`, so Kilobat can't tie its traffic or CPU to the run; the state still comes through.
+**Gemini CLI**, in `~/.gemini/settings.json`. Its hooks also get JSON on stdin; BeforeAgent marks a turn working, AfterAgent done, and a ToolPermission notification waiting. Gemini CLI runs as `node`, so Kilobat can't tie its traffic or CPU to the run; the state still comes through.
 
 ```json
 {

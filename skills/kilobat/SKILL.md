@@ -34,7 +34,7 @@ Pick by what the user describes. A task may need more than one skill; load them 
 | What is this process or host (nsurlsessiond, cloudd, gateway.icloud.com)? Is it safe to block, and what breaks? | `kilobat explain <process\|host> --json` or `explain_connection` |
 | Is Slack, Zoom, GitHub or another service down for everyone? | `kilobat down <service\|host> --json` or `service_status` |
 | Is my own model provider down (Claude Code, Codex, Copilot, Gemini CLI, an API)? | `kilobat down claude-code\|codex\|api.openai.com --json` or `service_status`, then `mac-agent-runs` |
-| The status page is green but the site still fails: blocked on this network, or not offered in this region? | `kilobat why <host> --json` or `diagnose_connection` (pass the app's error with `--error` / `error`); read `block` |
+| The status page is green but the site still fails: blocked on this network, or not offered in this region? | `kilobat why <host> --json` or `diagnose_connection` (give the app's error with `--error` / `error`); read `block` |
 | What public reports expect in a country | `kilobat restrictions --country XX --json` | `get_country_restrictions` |
 
 Blocked here, not down: when `block.state` is `blocked`, say what Kilobat measured, as its `summary` and `evidence` say it, and suggest only what `next` offers (another network, mobile data or roaming, the network's operator). When it is `regionUnavailable`, the service itself refuses where the connection appears to be (`exitCountry`); say so plainly. Never suggest a VPN, proxy, Tor, another DNS resolver or any other way around a block or a regional restriction, and never call either an outage.
@@ -56,9 +56,9 @@ For a problem none of these skills covers, or a macOS quirk, `https://kilobat.ap
 
 ## Conventions
 
-- Output is JSON when piped; pass `--json` where a command supports it. Some expert commands always print JSON and reject the flag. Errors go to stderr with a non-zero exit code.
+- Output is JSON when piped; add `--json` where a command supports it. Some expert commands always print JSON and reject the flag. Errors go to stderr with a non-zero exit code.
 - Run one-shot commands only. `status --watch` and `radar --watch` never exit; suggest them for the user's own Terminal.
-- `null` or missing fields mean "not measured", never zero or a pass.
+- `null` or missing fields mean "not measured", never zero or a success.
 - History (`report`, `health-history`, `outages`, `speed-history`, `spots`, `scan-history`) is recorded by the Kilobat app while it runs. A gap is not evidence that nothing happened.
 - macOS shows Wi-Fi names only to apps with Location permission. The CLI gets them from the running Kilobat app; without it, `ssid` is null and scans list "Hidden network". Signal, channel and band still work.
 - App IDs are bundle IDs (`com.example.App`) or `process:<name>` for processes without one, exactly as `status` prints them.
@@ -69,7 +69,7 @@ Run without asking: `diagnose`, `status`, `conditions`, `why`, `sessions`, `agen
 
 Name the exact change and wait for a yes before:
 
-- `speedtest`: uses up to 80 MB. On a metered network pass `--budget-mb 10` or less, or skip it.
+- `speedtest`: uses up to 80 MB. On a metered network add `--budget-mb 10` or less, or skip it.
 - `stream check` (`check_stream_readiness`): uploads to Cloudflare for about 8 seconds (at most 16 MB). Fine on an unmetered network when the user asks whether they can go live; on a metered one it uses the last speed test unless `--measure` (`allow_metered`), which needs a yes. Never run it while OBS is streaming.
 - `vpn leaks` (`check_vpn_leaks`): asks bash.ws, Cloudflare, a STUN server and api6.ipify.org, which see the user's address. Run it when the user asks about leaks with their VPN on; report each fix as written, and never call the VPN private because it passed.
 - `ip --public` (`get_exit_path` with `public_ip`): asks Cloudflare for the public IP. Only when the user wants their public IP or VPN exit; report the registry country as registry data, and never say a VPN or a country makes them private or anonymous.
@@ -78,7 +78,6 @@ Name the exact change and wait for a yes before:
 - `devices name <MAC> <name>`, `devices mark <MAC> mine|unknown|ignored`: change what Kilobat remembers about a device on the network. Mark one only with the user's answer; a new or unknown device is one they haven't identified, never proof of an intruder.
 - `approve`/`deny <app>`: answer an app waiting to connect, which also saves a rule. Show the user its signer and destinations first.
 - `wifi on|off|restart|disconnect|join`: change the connection. Turning Wi-Fi off or joining another network can cut off a remote session.
-- `wifi password` and `wifi share`: reveal a saved password after a macOS prompt. Only when the user asks for it.
 - `pack add`, `pack correct`, `pack end` (`set_data_pack`): change the user's data packs. A new pack on the same networks ends the old one, and its networks count as metered.
 - `uploads hold <app>` (`hold_upload`): pauses another app's upload, such as Dropbox, until an unmetered or faster network, a time, or `uploads resume <app>`. Say which app and until when.
 - `quit <PID>`: quits a process. `low-latency on [--for 15m|1h|2h] [--until-quit <app>]`: pauses AirDrop and AWDL while it runs (4 hours at most), with an administrator prompt; the user runs it in their own Terminal. `airdrop everyone|contacts|off`: opens System Settings for the user to change AirDrop visibility.
