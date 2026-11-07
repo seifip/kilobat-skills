@@ -11,7 +11,7 @@ Use these after the main workflow points at a layer. All are read-only unless ma
 | Is a VPN in the path? | `kilobat ip --json` | `vpn` full, partial (connected, but only some destinations use it) or off, `vpnName`, `interface`. `--public` adds the public IP from Cloudflare (contacts a third party). `kilobat interfaces --json` has the counters. |
 | Why do two speed tests differ? | `kilobat speed-compare --json` | The newest two saved tests by default: differences in network, time, server, connections, Wi-Fi band and signal, VPN, other traffic, idle latency. Differences, not proven causes. |
 | Which process talks to which host? | `kilobat destinations --json [--pid PID]` | Open sockets per process. |
-| What else is on the local network? | `kilobat devices --json` | Neighbor cache: address, MAC, interface. |
+| What else is on the local network? | `kilobat devices --json` | Neighbor cache: address, MAC, interface, `type` (camera, tv, printer, …) with `confidence` (set, high, medium, low) and `tags` (HomeKit, Matter, Thread border router). |
 | Did the connection drop earlier? | `kilobat outages [--days N]` | Outages recorded by the app (three failed checks to start, two successes to end). |
 | How did quality change over the day? | `kilobat health-history --hours 24 --json` | The app's periodic router, internet, jitter, loss and DNS checks. |
 | Which channel is least crowded? | `kilobat channels --json` | Congestion estimate per candidate channel. |

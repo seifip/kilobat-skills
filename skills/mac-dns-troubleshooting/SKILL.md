@@ -13,7 +13,7 @@ Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew insta
 
 ## 1. Rule out a login page first
 
-Run `kilobat diagnose --json`. If `measurements.captivePortal` is `true`, the network wants a login (hotel, café, plane, airport). Ask the user to open any http site in a browser to bring up the page. A custom DNS server can stop the page from appearing; if it never shows, offer `kilobat dns automatic` (with approval), log in, then switch back.
+Run `kilobat diagnose --json`. If `measurements.captivePortal` is `true`, the network wants a login (hotel, café, plane, airport). `kilobat portal --json` gives the sign-in page and says whether the network logged them out after an earlier sign-in; `kilobat portal open` opens the page when they ask. Otherwise ask the user to open any http site in a browser to bring up the page. A custom DNS server can stop the page from appearing; if it never shows, offer `kilobat dns automatic` (with approval), log in, then switch back.
 
 ## 2. Measure the current resolver
 
@@ -27,7 +27,11 @@ From the same `diagnose` output:
 
 ## 3. Compare resolvers
 
-Run `kilobat dns-benchmark`. It prints JSON (no `--json` flag): one entry per resolver with `resolver` (`System`, `1.1.1.1` for Cloudflare, `8.8.8.8` for Google, `9.9.9.9` for Quad9), `milliseconds` (null if none answered) and `replies`, out of three test domains.
+If the Kilobat app has been running, start with `kilobat dns fastest --json` (CLI 0.29; MCP `get_fastest_dns`): runs on several days on this network, so it is far better evidence than one benchmark. `state` is `learning` until 3 different days have runs, then `network` (the network's own DNS is fastest or nothing beat it clearly) or `faster` with `choice`, `choiceMs` against `networkMs`. `penalized` lists resolvers whose CDN answers connect clearly slower, which make pages slower despite faster lookups; `networkRewritesMissing` means the network's DNS invents answers for names that don't exist.
+
+Newer than CLI 0.33, each resolver also has `label`, `runBy`, `entity` and `jurisdiction`: who runs it and the country it's established in ("Quad9 · Switzerland", "Cloudflare · United States"), from operators' own pages. The network's own DNS is "Your provider’s" and an address Kilobat doesn't know is "Unknown operator", with `jurisdiction` null: say so, and don't guess a jurisdiction from the address. `history` holds each resolver's `answered`, `failed` and `slow` lookups (slower than `slowMs`) in the runs of the last 14 days with a `successRate`; a resolver that is fast but fails a few percent of lookups is a worse choice than a slightly slower one that answers everything. `fallback` is the second resolver the user picked (null if none), and `applied.fallback` is true while Kilobat is on it because the fastest failed.
+
+For one quick sample, run `kilobat dns-benchmark`. It prints JSON (no `--json` flag): one entry per resolver with `resolver` (`System`, `1.1.1.1` for Cloudflare, `8.8.8.8` for Google, `9.9.9.9` for Quad9), `milliseconds` (null if none answered) and `replies`, out of three test domains.
 
 - Run it twice. Treat a resolver as faster only if it wins both runs by a clear margin, roughly 20 ms or more. Single-digit differences are noise.
 - Fewer `replies` than the others means lost queries, which hurts more than a few milliseconds.
@@ -43,6 +47,8 @@ Name the change, the reason with numbers, and how to undo it, then wait for a ye
 
 - `kilobat dns cloudflare`, `kilobat dns google` or `kilobat dns quad9` sets that provider on the active network service. `kilobat dns automatic` returns to the network's own DNS.
 - `kilobat dns flush` clears the macOS DNS cache. It helps after a site moved or a stale "server not found"; it does not make DNS faster.
+- To have the app pick the fastest DNS per network and switch on joining (Pro, CLI 0.29): `kilobat dns auto on` for every network or `kilobat dns auto on --network "<name>"` for one; MCP `set_fastest_dns`. It never switches while a VPN, a configuration profile or a Wi-Fi sign-in page manages DNS, never over servers the user set, and puts automatic DNS back when lookups fail. `kilobat dns exclude google` keeps one out.
+- To give it a second resolver for when the fastest fails (newer than CLI 0.33): `kilobat dns fallback quad9` (or cloudflare, google, an IP address; `off` for none); MCP `set_dns_fallback`. The app moves to the fallback only if it answers right then, and puts automatic DNS back if the fallback fails too. Mention who runs the fallback and where before setting it.
 - Other providers cannot be set by the CLI. The user sets them in System Settings › Network › the service › Details › DNS, or uses an encrypted DNS profile (below).
 - Encrypted DNS: `kilobat dns-profile https://dns.example/dns-query > Kilobat-DNS.mobileconfig` writes a DNS-over-HTTPS configuration profile for the given HTTPS endpoint, for example `https://cloudflare-dns.com/dns-query` or `https://dns.quad9.net/dns-query`. The user reviews and installs it in System Settings; removing the profile restores the previous behavior.
 

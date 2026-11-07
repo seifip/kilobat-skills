@@ -1,0 +1,17 @@
+{
+  "name": "kilobat",
+  "owner": {
+    "name": "Kilobat",
+    "url": "https://kilobat.app"
+  },
+  "metadata": {
+    "description": "Kilobat's network diagnostics for coding agents on a Mac."
+  },
+  "plugins": [
+    {
+      "name": "kilobat",
+      "source": "./",
+      "description": "Network diagnostics for coding agents on a Mac: Kilobat's skills and MCP server."
+    }
+  ]
+}

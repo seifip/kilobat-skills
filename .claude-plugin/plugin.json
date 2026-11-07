@@ -1,0 +1,20 @@
+{
+  "name": "kilobat",
+  "description": "Kilobat for coding agents: skills that read Kilobat's network diagnostics and the Kilobat MCP server, so your agent can tell why a Mac's connection is slow or failing, what is using the network, and what to try next. Needs the Kilobat CLI (brew install seifip/kilobat/kilobat).",
+  "version": "1.0.0",
+  "author": {
+    "name": "Kilobat",
+    "url": "https://kilobat.app"
+  },
+  "homepage": "https://kilobat.app/agents",
+  "repository": "https://github.com/seifip/kilobat-skills",
+  "keywords": [
+    "network",
+    "wifi",
+    "dns",
+    "vpn",
+    "macos",
+    "diagnostics",
+    "mcp"
+  ]
+}

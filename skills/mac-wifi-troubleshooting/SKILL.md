@@ -1,6 +1,6 @@
 ---
 name: mac-wifi-troubleshooting
-description: Fix weak, slow, stuttering or dropping Wi-Fi on a Mac with Kilobat. Measures signal and noise, finds crowded channels, compares spots to find where the signal is best or where to move the router, finds periodic latency spikes, checks AirDrop/AWDL and Bluetooth sharing the radio, and reads past drops and access-point roams. Use for dead zones, Wi-Fi that disconnects or lags in bursts, mesh or extender problems and 2.4 vs 5 vs 6 GHz questions.
+description: Fix weak, slow, stuttering or dropping Wi-Fi on a Mac with Kilobat. Measures signal and noise, finds crowded channels, compares spots to find where the signal is best or where to move the router, finds periodic latency spikes, checks AirDrop/AWDL and Bluetooth sharing the radio, and reads past drops and access-point roams. Use for dead zones, Wi-Fi that disconnects or lags in bursts, mesh or extender problems, 2.4 vs 5 vs 6 GHz questions, and Matter, Thread or HomeKit devices that won't set up or separate Thread networks.
 ---
 
 # Mac Wi-Fi troubleshooting with Kilobat
@@ -15,7 +15,7 @@ macOS shows Wi-Fi names only to apps with Location permission. The CLI gets them
 
 ## 1. Read the link
 
-For the radio alone, `kilobat wifi status --json` is quickest: `ssid`, `rssi`, `noise`, `signalNoiseRatio`, `channel`, `band`, `transmitMbps` and `score`. `kilobat diagnose --json` adds router latency and loss; its `measurements.radio` has the same fields:
+For the radio alone, `kilobat wifi status --json` is quickest: `ssid`, `rssi`, `noise`, `signalNoiseRatio`, `channel`, `band`, `transmitMbps` and `score`, and in newer CLIs `widthMHz`, `standard` (Wi-Fi 4 to 7), `phyMode` (such as 802.11ax), `security` with `securityLevel` (strong, good, weak or open) and `securityNote`, `transmitPowerDBm` and `countryCode`. `kilobat diagnose --json` adds router latency and loss; its `measurements.radio` has the radio fields:
 
 | Field | Good | Degraded | Poor |
 |---|---|---|---|
@@ -26,18 +26,20 @@ The weaker of the two decides. `signalScore` is `(rssi + 90) × 2`, clamped to 0
 
 - `band` (2.4, 5 or 6 GHz) and `channel`. 2.4 GHz reaches further but is slower and more crowded.
 - `transmitMbps`, the negotiated link rate. Low with a good RSSI points to interference, an old router or a narrow channel.
+- `standard`: a Wi-Fi 4 or older link on a recent Mac means an old router or one held back to compatibility mode, which caps speed whatever the signal. A narrow `widthMHz` (20 MHz on 5 GHz) does the same.
+- `securityLevel` `weak` (WEP or the first WPA) also slows Wi-Fi down; on the user's own router, suggest WPA2 or WPA3. On `open`, say what `securityNote` says, plainly and without alarm.
 - `routerLatencyMs` above 20 ms or router `lossPercent` above 0 with a good signal points to congestion or a busy router rather than distance.
 
 If the Mac is on Ethernet (`radio` fields are null), this skill does not apply.
 
 ## 2. Check for crowding
 
-Run `kilobat scan --json`. Each entry has `ssid`, `rssi`, `noise`, `channel`, `band` and `widthMHz`.
+Run `kilobat scan --json`. Each entry has `ssid`, `rssi`, `noise`, `channel`, `band` and `widthMHz`, and in newer CLIs the strongest `security` the network offers with its `securityLevel`.
 
 - Count networks on the user's channel with `rssi` stronger than about −75 dBm. Three or more strong neighbors on the same channel means contention.
 - On 2.4 GHz only channels 1, 6 and 11 don't overlap. A network on 3 or 9 interferes with two of them.
 - 80 or 160 MHz channels are faster but collide with more neighbors. In a crowded building 40 MHz on 5 GHz is often more stable.
-- The same `ssid` appearing on several channels means a mesh or extenders. Check that the Mac is on the strongest one.
+- The same `ssid` appearing on several channels means a mesh or extenders. Check that the Mac is on the strongest one: `kilobat wifi nodes --json` (`get_wifi_nodes`, CLI 0.31) groups the radios into nodes and says `stuck` when the Mac has stayed on one at least 15 dB weaker than another for two minutes. macOS only roams below about −75 dBm with a 12 dB better candidate, so a Mac at −72 dBm can sit on the far node all day. With the user's yes, `kilobat wifi reconnect` (`reconnect_wifi`) moves it; Wi-Fi drops for a few seconds. When `repeats` is 3 or more, suggest the mesh app's steering or roaming settings, or moving nodes so they overlap less.
 
 Run `kilobat channels --json` for Kilobat's estimate: `band`, `current`, `recommended` and a `congestion` score per candidate channel (lower is better). Suggest a quieter channel by name, for example "channel 36 scores 56, your channel 44 scores 73". The change happens in the router's admin page; Kilobat cannot change it.
 
@@ -71,6 +73,17 @@ When the signal is fine but games, calls or remote desktops lag in bursts, look 
 - `kilobat airdrop --json` (MCP: `get_nearby_radios`) shows whether the AirDrop link is up and active and which features use it, and the AirDrop visibility. Only System Settings can change visibility; `kilobat airdrop off` opens the page (ask first). Visibility doesn't stop AWDL from scanning; the low-latency pause does.
 - To test AWDL as the cause, the user runs `kilobat low-latency on --for 15m` in their own Terminal (administrator prompt; 4 hours at most with `--for`, or `--until-quit <app>`), then `kilobat stutter` again. Fewer spikes with the pause means AWDL contributes; the same spikes mean it doesn't. `kilobat low-latency off` restores it.
 - `kilobat bluetooth --json` lists Bluetooth devices. Bluetooth uses 2.4 GHz; when `wifiBand` is 2.4 GHz and headphones, a keyboard or a mouse are connected (`sharesBand`), suggest a 5 GHz network. The Kilobat app's Wi-Fi menu shows the same tag and a shortcut to a known 5 GHz network.
+
+## Casting, AirPlay and printers
+
+When a Chromecast, AirPlay TV or printer doesn't show up, or a cast stutters, run `kilobat local check --json` (MCP `check_local_network`). `verdict` `works` lists the `devices` that answered; `isolated` means proxy ARP suggests possible client isolation, never confirmed blockage; explain that ordinary routing also uses proxy ARP, and offer a phone hotspot, the TV's Wi-Fi Direct or an HDMI cable if casting fails; `noneSeen` is not proof of isolation, so say what `detail` says and don't claim it. When `setupNetwork` is set, the Mac is on a printer's, camera's or drone's own Wi-Fi: no internet is expected there, so don't troubleshoot an outage. Browser traffic only suggests a possible cast. While `casting` is set, its `advice` lists what on the Mac's side to change.
+## Smart-home devices: Matter, Thread and HomeKit
+
+When a Matter, Thread or HomeKit device won't set up, drops off, or the user asks whether their network suits Matter, run `kilobat smarthome --json` (MCP `check_smart_home`; it needs a CLI that has `smarthome`, otherwise suggest `brew upgrade kilobat`). It only listens to Bonjour for a few seconds and never sets up, pairs or controls anything.
+
+- `threadNetworks` with more than one entry is the main finding: devices on one Thread network can't use the other's border routers. Name the makers (`makers`, for example Apple and Google) and give the `findings` fix: add new Thread devices with the app whose network the user keeps and share them to the others with Matter's pairing code, or use Thread 1.4 credential sharing where a border router has `credentialSharing`.
+- `checks`: `ipv6` unknown reports only link-local addresses observed; it does not prove router IPv6 is disabled. A problem can mean this Mac has no link-local IPv6. Matter needs IPv6; check router settings using `guide` when available. `bonjour` warning means no peers answered; `isolation` stays unknown on a quiet network because silence is not proof of isolation; `subnet` warning means devices sit on another subnet or VLAN; `wifi24` warning means the scan did not see the same network name on 2.4 GHz, which most Wi-Fi smart-home devices need for setup. `unknown` means Kilobat couldn't tell: say so, never guess.
+- `localNetwork` `denied`: macOS's Local Network permission is off for the app running the CLI or MCP server, so nothing was seen. Point to System Settings › Privacy & Security › Local Network.
 
 ## When the cause isn't clear: look up a guide
 

@@ -13,6 +13,12 @@ Use the Kilobat MCP tools if connected, otherwise the `kilobat` CLI (`brew insta
 
 If a call is in progress, skip the speed test: it will disrupt the call.
 
+For a call or a remote session that already happened, read what the app recorded first: `kilobat calls --json` (`get_call_reports`) for calls, `kilobat remote --json` (`get_remote_session_reports`, CLI 0.25 or later) for SSH, Mosh, Screen Sharing, Parsec and other remote desktops. Each lag or freeze has a `cause`; `portal` means the Wi-Fi's sign-in page logged the Mac out, `remoteSlow` means the server itself kept input waiting while the line to it was fine, and `remotePath` that the delay was past the provider, near the server. Suggest Mosh for SSH only when the report's `suggestsMosh` is true: the lags came from the line (Wi-Fi, AirDrop, Starlink, the provider or the path) or the host is far, jittery or lossy. Not when an app, another device, the Mac or the server was the cause.
+
+For a live stream from OBS, read the stream reports: `kilobat stream reports --json` (`get_stream_reports`, CLI 0.33 or later). OBS counts three kinds of lost frames and only one is the network: a drop window caused by encoding lag (the encoder couldn't keep up) or rendering lag (the GPU) is the Mac, so don't send the user to fix their Wi-Fi for it. Before going live, `kilobat stream check --json` (`check_stream_readiness`) measures the upload against OBS's bitrate plus 30% headroom and suggests a bitrate that fits; on a metered network it uses the last speed test unless the user agrees to measure. Don't run it while OBS is streaming.
+
+For cloud gaming (GeForce NOW, Xbox Cloud Gaming, Boosteroid, Amazon Luna, Shadow), read `kilobat cloud-gaming --json` while it plays and `kilobat cloud-gaming reports --json` afterwards (`get_cloud_gaming`). Live, `issues` lists what is in the way now (airDrop, band24, weakSignal, an app uploading or downloading; `pausable` when Kilobat can hold it, from the Pause AirDrop and background transfers button in Health). Each past stutter's `factors` holds everything true at the time, the Mac's own conditions first, so "band24, app" means 2.4 GHz Wi-Fi while that app moved data: suggest 5 GHz or Ethernet and pausing the app, in that order. `beyondRouter` alone means the line at the Mac was fine; suggest a closer server region in the service. On a hotspot, `gigabytesPerHour` and `projectedGigabytes` say what a session costs. A browser session Kilobat couldn't name from its hosts doesn't appear, which isn't a clean result. Don't run a speed test while a cloud game plays.
+
 ## 1. Check latency, jitter and loss
 
 Run `kilobat diagnose --json`. Kilobat's call thresholds:
@@ -45,9 +51,13 @@ Quote the `verdict`. How to read the pattern:
 
 `kilobat bluetooth --json` (MCP: `get_nearby_radios`) shows Bluetooth headphones, keyboards and mice that share 2.4 GHz with Wi-Fi; when `wifiBand` is 2.4 GHz and one is connected, suggest a 5 GHz network.
 
+When the user hears the call through AirPods or other Bluetooth headphones, run `kilobat bluetooth audio --json` (CLI 0.28 or later; MCP: `get_bluetooth_audio`) while they are connected: `risks` lists what shares the radio (2.4 GHz Wi-Fi, a crowded channel, AirDrop, a big transfer, a weak signal, many devices) and `advice` what to change, in order. `output.microphone` true means the headset is in hands-free mode; suggest picking the Mac's microphone in the call app. Kilobat can't hear dropouts, so present it as likely causes, not proof. Call reports carry the same as `bluetooth` (Pro).
+
 ## 3. Find uploads competing with the call
 
 Run `kilobat status --json` and sort `apps` by `uploadBytesPerSecond`. Calls need steady upload; a sync or backup can take all of it. Typical culprits: iCloud Photos and iCloud Drive, Dropbox, Google Drive, OneDrive, Time Machine to a network disk, cloud backups, and large email attachments. Run it twice, 30 seconds apart, since sync works in bursts.
+
+Another Mac at home can take the line too. If the user paired their Macs in Kilobat (Settings › Household Macs), `kilobat household --json` (MCP: `get_household`; CLI 0.22) lists each paired Mac's live `down`, `up` and `apps`, with `busy` when it moves enough to freeze a call. Live usage needs the app with Kilobat Pro; pairing happens only in the app.
 
 ## 4. Measure capacity and bufferbloat, with approval
 
@@ -69,6 +79,10 @@ Kilobat's own verdicts are in the same JSON: `voiceCalls`, `videoCalls` (the hig
 | Voice only | 0.1 | 0.1 |
 
 For group calls with many video tiles, more download helps.
+
+## Is it the calling service?
+
+When everyone on the call froze at once, or the line checks out above, ask the service itself: `kilobat down zoom --json` (or `teams`, `slack`, `meet`, `discord`, `facetime`; MCP `service_status`, CLI 0.20 or later). Say Zoom is down only when `state` is `partialOutage` or `majorOutage`, quoting `incident` and `page`; `operational` means its status page reports no problems. Call reports (`kilobat calls --json`) carry a `service` field with what the page said when a call that froze beyond the router ended.
 
 ## 5. Recommend
 

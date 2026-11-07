@@ -16,7 +16,7 @@ Kilobat is a macOS network utility. Its CLI (`kilobat`) measures Wi-Fi signal, r
 
 ## Safety: read freely, ask before changing
 
-Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `route-history`, `interfaces`, `ip` (without `--public`, which contacts Cloudflare), `speed-compare`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`.
+Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `route-history`, `interfaces`, `ip` (without `--public`, which contacts Cloudflare), `speed-compare`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`, `portal`, `down` (CLI 0.20; asks public status pages only).
 
 Ask first, naming the exact change:
 
@@ -30,6 +30,8 @@ Kilobat saves rules; blocking only happens while the Kilobat app runs with its n
 ## Workflow
 
 ### One site, API or app can't connect
+
+When one service fails while the rest of the internet works ("is Slack down or is it me?"), run `kilobat down <service|host> --json` (MCP: `service_status`, CLI 0.20 or later). Report an outage only when `state` is `partialOutage` or `majorOutage` and quote the page's `incident` and `page`; when it's `operational`, say the status page reports no problems and go on with the doctor below. `unknown` means the page couldn't be read, not that the service is down. The doctor adds the same answer as a `Status page` step for hosts it knows. `kilobat restrictions --country XX --json` (MCP `get_country_restrictions`, CLI 0.46) reads a bundled guide of what public reports expect in that country. It is not a live probe. When the Mac's time zone country and the target match a row, `why` and `down` add `expected` and a skipped `Sources` step. Quote that as expected here per sources. Do not treat it as `block`, do not let it replace `verdict` or `next`, and do not suggest a VPN, proxy, other DNS or any way around a restriction. NetworkBlockCheck stays the measurement.
 
 When the internet works but one destination fails ("this app can't connect", "the agent can't reach the API", a timeout, a reconnect loop or a certificate error), start with the doctor: `kilobat why <url|host> --json` (MCP: `diagnose_connection` with `target`). It needs CLI 0.4 or later; CLIs up to 0.5.1 report `VPN & proxy` and `Connection` instead of the interface, proxy, IPv4 and IPv6 steps below, and lack `--proxy`, redirects, the HEAD-to-GET retry and `Open connections`; CLIs up to 0.5.1 also lack `--failed-at`, `client`, `method`, `path`, `App setting` and `Transfer`. Pass the exact URL that fails, path and query included: the doctor requests it as given and shows query values only as `[redacted]`. Don't repeat a signed URL's values yourself. Pass `--app <id>` (MCP: `app`) with the `id` from `status` when one app is affected, so its Kilobat rules, the proxy variables in its environment and its open connections to the host are checked too. When the app uses a proxy address from its own settings, which Kilobat can't read, ask for it and pass `--proxy <url>` (MCP: `proxy`). A setting with no address, such as LM Studio's Hugging Face proxy switch, can't be passed: for LM Studio and huggingface.co the doctor adds an `App setting` step on its own. When the user says when the app failed, pass `--failed-at <time>` (MCP: `failed_at`, ISO 8601 or 14:05). Its probes run inside Kilobat, not through `curl` or `nc`, so a strict profile can't block the check.
 
@@ -64,6 +66,12 @@ Run `kilobat diagnose --json` (a few seconds). Read the top-level fields first:
 - `signalScore` (0–100), `signalNoiseRatio` (dB), `routerLatencyMs`, `internetLatencyMs`, `internetJitterMs`.
 - `measurements`: radio (`rssi`, `noise`, `channel`, `band`, `transmitMbps`), `router` and `internet` ping samples with `lossPercent`, `dnsMilliseconds`, `dnsServers`, `captivePortal`, `networkService`.
 
+When the complaint is calls freezing, run `kilobat calls` first: it lists each recent call's freezes with their cause, including when the Mac's own CPU, memory, heat or GPU was the problem rather than the network.
+
+When a proxy app (Clash, Surge, sing-box) or a VPN is involved, run `kilobat proxy` and `kilobat vpn` first: a system proxy pointing at an app that isn't running breaks every browser, and DNS or IPv6 can skip a VPN. `kilobat proxy test` names a dead node. Tell the user what to change in their proxy app; never change it yourself.
+
+When the user needs to show their provider or IT desk, run `kilobat support-report --host <the failing host>` (MCP `create_support_report`) and hand them the text. It leaves out the network's name and every local address. Never send it anywhere yourself.
+
 One sample is a snapshot. For "flaky" or "drops sometimes", run diagnose three times about 20 seconds apart and compare, and read `kilobat health-history --hours 24 --json`, `kilobat outages --days 7` and `kilobat speed-history` for earlier events. These need CLI 0.2 or later; if a command is unknown, suggest `brew upgrade kilobat`.
 Treat missing or null measurements as unavailable, not zero or a passing result. Report what was actually measured and avoid naming a cause without corroboration.
 
@@ -73,7 +81,7 @@ Work from the Mac outward, considering each measured layer; more than one issue 
 
 | Symptom in the JSON | Layer | What to tell the user |
 |---|---|---|
-| `captivePortal: true` | Network login | Open the network's login page in a browser, then retest. Nothing else is meaningful until then. |
+| `captivePortal: true` | Network login | Run `kilobat portal --json` (MCP `get_captive_portal`): it says whether the network wants a sign-in or logged the user out, and gives the sign-in page. Have them sign in (`kilobat portal open` opens the page when they ask), then retest. Nothing else is meaningful until then. |
 | `rssi` below −65 dBm, `signalNoiseRatio` below 25 or `signalScore` below 50 | Wi-Fi signal | Move closer to the router or remove obstructions. Radar finds a better spot (step 5). |
 | `routerLatencyMs` above 20 or router loss | Local link | Wi-Fi congestion or a busy router. Check `scan` for crowded channels and `status` for heavy apps; restart the router last. |
 | Router fast, `internetLatencyMs` above 120 or internet loss of 5% or more | Internet path | The path to the test target may be slow or lossy; it does not identify the provider as the cause. Compare another target or network and retest. |

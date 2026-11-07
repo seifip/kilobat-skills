@@ -1,6 +1,6 @@
 ---
 name: mac-agent-runs
-description: Keep a Mac awake for long AI agent runs, builds and downloads with Kilobat, with the lid closed when the user allows it, check whether the connection suits a big transfer, and find out when a run finished, is waiting for the user, stalled or hit a network change. Covers kilobat awake, keep_awake, get_conditions, kilobat sessions, kilobat why and connecting Claude Code, Codex or Gemini CLI hooks, or Cline's plugin, to kilobat agent-event. Use for "don't let my Mac sleep during this", "is this a good time to download", "did the agent finish", "tell me when Claude needs me" or "why can't the agent reach this API".
+description: Keep a Mac awake for long AI agent runs, builds and downloads with Kilobat, with the lid closed when the user allows it, check whether the connection suits a big transfer, and find out when a run finished, is waiting for the user, stalled or hit a network change. Covers kilobat awake, keep_awake, get_conditions, kilobat sessions, kilobat agent-log (agent_network_log), kilobat why and connecting Claude Code, Codex or Gemini CLI hooks, or Cline's plugin, to kilobat agent-event. Use for "don't let my Mac sleep during this", "is this a good time to download", "did the agent finish", "tell me when Claude needs me", "what did that install connect to" or "why can't the agent reach this API".
 ---
 
 # Long agent runs on a Mac with Kilobat
@@ -67,7 +67,19 @@ Only when the user asks to close the lid or carry the Mac during a run. It needs
 
 Sessions are recorded only while the Kilobat app runs. An empty list does not prove nothing ran.
 
+## 3b. What a run contacted
+
+`agent_network_log` (CLI: `kilobat agent-log --json`; needs CLI 0.21) lists every host an agent and the processes it started (npm, pip, uv, curl, git, MCP servers, through shells too) contacted, as the app recorded it. With no arguments it returns the session of the agent running the MCP server or the CLI, so you can check what your own install or script talked to; `all`, `since` (2h, 3d, 2026-10-30), `agent` and `flagged` narrow it.
+
+- Each session: `agent`, `project`, `cwd`, `start`, `end`, `running`, `sent`, `received`, `hostCount`, `flaggedCount`.
+- Each host: `process`, `host` (the name, or the address when none is known), `nameSource` (`filter`: the name the app asked for; `lookup`: a well-known or command-line host that resolves to that address on this Mac; `reverse`: reverse DNS, the server's name, not necessarily the one asked for), `addresses`, `port`, `transport`, `first`, `last`, `sent`, `received`, `connections`.
+- `flags`: `newHost` (no agent contacted it before; registries and the agent's own service never are), `plainHTTP`, `largeUpload` (over 10 MB to a host other than the agent's own service), `addressOnly`, `shareOrTunnel` with `category` (paste site, file share, tunnel, request catcher).
+
+Report what was contacted, by which process, and how much was sent. A flag is a reason to look, not proof of anything: never say data was stolen or the agent is compromised. `recording: false` means the app doesn't record (it's part of Kilobat Pro); a missing log means it never has. Suggest `kilobat agent-log --watch` in the user's own Terminal to record live without the app. A row flagged `blocked` is a connection Kilobat's Protection refused (a known malware, phishing or scam host, or the agent guard); report it with its list, and never turn Protection off to retry. Before fetching from an unfamiliar host, `check_host_reputation` (CLI 0.26: `kilobat protect check <host>`) says whether it is on a threat list. Not attributed: traffic macOS services make for a process (DNS, nsurlsessiond), Docker containers and VMs, and agents inside an editor's extension host (Cline in VS Code). An empty session doesn't prove nothing happened.
+
 ## 4. When the agent can't reach something
+
+When your own model provider keeps answering with errors, timeouts or overloaded responses, first ask whether it's the provider: `service_status` with `service` set to your part of it (`claude-code` or `anthropic-api`, `codex` or `openai-api`, `copilot`, `cursor-cli`, `gemini-code-assist`, `vertex-ai`, `mistral`, `groq`, and so on) or the API host you call, such as `api.anthropic.com` (CLI: `kilobat down claude-code --json`, CLI 0.20 or later). Pages split into parts are read per part, so a claude.ai outage doesn't count against the API. If `state` is `partialOutage` or `majorOutage`, tell the user it's on the provider's side, quote `incident` and `page`, and wait or retry later; don't change their network. `operational` means the page reports no problems: go on with the check below. `unknown` means the page couldn't be read.
 
 Run `diagnose_connection` with the `target` host or URL (CLI: `kilobat why <url|host> --json`; it exits 1 when a layer failed). It checks the Mac's network, VPN and proxy, DNS, Kilobat's own rules, the TCP connection, TLS and the HTTP answer, and stops at the first failure. Report `verdict` and `next`, and the failing step's `detail`. Pass `app` (bundle ID or `process:<name>`) when one app is affected, to include its Kilobat rules, environment proxy and open connections, and `proxy` when it uses a proxy address from its own settings. Give the exact failing URL; query values are redacted in the output. A `Transfer` warning means a download already under way went quiet, which isn't the same as finished: say it went quiet, and suggest checking it in the app.
 
@@ -142,4 +154,6 @@ Other agents: call `kilobat agent-event start|working|waiting|done|failed --agen
 | `keep_awake` (`minutes`, `reason`, `lid_closed`) | `kilobat awake --for <duration> [--lid-closed]` | Holds off idle sleep; tell the user. `lid_closed` needs their confirmation |
 | `release_awake` | Ctrl-C on `kilobat awake` | Ends the hold |
 | `list_sessions` (`days`) | `kilobat sessions --json --days N` | No |
+| `agent_network_log` (`all`, `since`, `agent`, `flagged`) | `kilobat agent-log --json [--all] [--since 2h] [--agent claude] [--flagged]` | No |
+| `service_status` (`service`, `list`) | `kilobat down [service\|host…] --json` | No |
 | `diagnose_connection` (`target`, `app`, `proxy`, `context`, `failed_at`) | `kilobat why <target> --json [--app <id>] [--proxy <url>] [--context container\|vm\|remote\|provider] [--failed-at <time>]` | No |

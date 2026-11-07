@@ -1,6 +1,6 @@
 ---
 name: mac-hotspot-data-saver
-description: Save mobile data on a Mac tethered to a phone hotspot, on plane or hotel Wi-Fi, or with a data cap. Uses Kilobat to show which apps use data now and today, switch to its Travel profile, set a data budget that resets with the plan, cap single apps and block background apps. Use for "what ate my data", roaming, tethering and metered connections.
+description: Save mobile data on a Mac tethered to a phone hotspot, on plane or hotel Wi-Fi, or with a data cap. Uses Kilobat to show which apps use data now and today, switch to its Travel profile, set a data budget that resets with the plan, track a travel eSIM's data pack and the day it runs out, cap single apps and block background apps. Use for "what ate my data", "when will my eSIM run out", roaming, tethering and metered connections.
 ---
 
 # Save hotspot data on a Mac with Kilobat
@@ -47,6 +47,8 @@ AI coding agents: `kilobat sessions --json --days 1` (MCP: `list_sessions`) list
 
 History is recorded only while the Kilobat app runs, so gaps do not prove nothing was used.
 
+Big uploads right now: `kilobat uploads --json` (MCP: `get_uploads`) lists apps that have kept uploading 1 MB/s or more for 20 seconds, with `bytesPerSecond` and `sentBytes`. `etaSeconds` and `totalBytes` are set only when the total is known (curl sending one file); for Dropbox, Google Drive, iCloud, git push and browsers they are null, so give the rate and what was sent, never a guessed time. With approval and Kilobat Pro, `kilobat uploads hold Dropbox --until unmetered` (MCP: `hold_upload`) holds a sync app's upload until the Mac is off the hotspot; it resumes by itself there, after 8 hours at most, or with `kilobat uploads resume Dropbox`. `method: none` means Kilobat won't hold that app (browsers, macOS services, command-line tools); say so with its `reason`.
+
 ## 3. Offer the Travel profile
 
 Travel is Kilobat's "only the essentials" profile. Each profile keeps its own rules. Apps without a rule follow the "new-apps" setting (`kilobat settings new-apps`), which is `block` unless the user changed it. Build the allow list before switching, so nothing the user needs is cut off in between:
@@ -75,11 +77,21 @@ Kilobat samples traffic about once a second, so budgets and quotas are approxima
 
 When the carrier's app shows a different number, compare the same period instead of guessing: `kilobat report compare --total 3.2GB --period this-month --network "<hotspot name>" --json` (MCP: `compare_usage`; CLI 0.6 or newer). It reports Kilobat's total in the carrier's unit, the hours it recorded and its gaps, and likely reasons such as the phone's own use and binary GB. `mac-bandwidth-monitor` has the full steps. Never call the carrier's figure wrong.
 
+### A travel eSIM or other data pack
+
+A prepaid pack (10 GB for 30 days) doesn't start over, so use a data pack rather than a budget (CLI 0.31 or newer; check `kilobat pack --help`). `kilobat pack --json` (MCP: `get_data_pack`) lists packs with `leftBytes`, `perDayBytes` over `paceDays` (the last three days, or since it started, counted as at least a day), `runsOut` and `daysEarly` when it runs out before it ends, `lastsWholePack`, and a `summary` line. Relay the summary, such as "6.2 GB left · runs out around 14 Nov, 5 days before the pack ends".
+
+With the user's yes: `kilobat pack add 10 30 --name "Japan eSIM"` adds a pack on the current network; `--network "<name>"` picks a network Kilobat has seen, or any text the names contain (such as iPhone); `--start 2026-11-02` when it started earlier; a date instead of days is its last day. MCP: `set_data_pack` with `action` add. The pack's networks count as metered. A new pack on the same networks ends the old one.
+
+Kilobat counts this Mac only. If the phone or another device uses the same pack, say that less is left, and offer `kilobat pack correct <GB-left>` with the figure from the carrier's app (`set_data_pack` with `action` correct, `left_gb`). In the app (Pro), the pack can also hold big uploads until Wi-Fi.
+
 `kilobat remember-network` saves the current profile and budget for this network, so Kilobat applies them the next time the Mac joins it. A remembered profile wins over automatic Travel. `kilobat networks` lists networks with their remembered profile, budget and data cost; `kilobat networks forget <name>` drops them.
 
 `status --json` includes `budgetUsed` (0–1) and `filteringActive` when the Kilobat app is running, and `budget` (limit, `cycle`, `usedBytes` this cycle, `resets`) and `quotas` always. If `filteringActive` is false, the budget and rules are saved but nothing is stopped.
 
 ## 5. Block specific apps
+
+When an app stops working on the hotspot and the user asks why, `kilobat verdict --app <id> --json` (MCP `explain_verdict`) names the rule: Travel's app rule or default, a Send later hold until an unmetered network, paused updaters, the data budget or the app's quota, with where to change each.
 
 For a single heavy app the user does not need now, block it temporarily rather than for good: `kilobat block com.example.App --minutes 120` (1–1440 minutes). Without `--minutes` the rule stays until removed with `kilobat allow`. Rules apply to the current profile, so check which one is active first.
 
@@ -88,6 +100,10 @@ Settings outside Kilobat the user can change themselves:
 - System Settings › Wi-Fi › Details for the hotspot network › Low Data Mode, which asks macOS and some apps to pause background work.
 - Pausing iCloud Photos sync, Dropbox or Google Drive from their own menus.
 - Turning off automatic updates in System Settings › General › Software Update, or in apps that update from inside themselves (`inProcess` above), while travelling.
+
+## 5b. A hotspot stuck at one slow speed
+
+When downloads on the hotspot keep stopping at the same speed, the plan's hotspot allowance may be used up, or the plan caps hotspot. Run `kilobat hotspot --json` (CLI 0.34; MCP `get_hotspot_throttling`). `state` cap means every speed test and big download on that hotspot, from several sources on different occasions, sat near one of the limits carriers publish while the ping stayed normal; videoCap means video was held near 1.5 Mbps while other downloads ran faster; learning means too few measurements, and noCap means speeds wander (the signal or a busy cell). Say it the way Kilobat does, "looks like your carrier's hotspot cap", never as certain, and give the `advice`: check the hotspot data left in the carrier's app (`carrier.page` links that carrier's published rules on kilobat.app), some plans cap hotspot permanently, compare with a speed test in the phone's own browser, and consider another plan or a travel router. If the carrier is unknown, ask the user, or with their agreement run `kilobat hotspot --detect`, which asks Cloudflare and RIPE NCC whose network the public address is in. Never suggest ways to hide hotspot use from the carrier, such as changing TTL.
 
 ## 6. Check it worked
 
