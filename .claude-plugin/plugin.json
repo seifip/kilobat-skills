@@ -18,5 +18,9 @@
     "speedtest",
     "dns",
     "hotspot"
-  ]
+  ],
+  "documentationUrl": "https://kilobat.app/agents",
+  "supportUrl": "https://kilobat.app/support",
+  "privacyPolicyUrl": "https://kilobat.app/privacy",
+  "termsOfServiceUrl": "https://kilobat.app/terms"
 }
