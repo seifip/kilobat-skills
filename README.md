@@ -42,6 +42,10 @@ Already installed? `brew upgrade kilobat`.
 
 Or connect the MCP server: `claude mcp add kilobat -- kilobat mcp`.
 
+## Services the skills contact
+
+The skills run the local `kilobat` CLI. Its checks contact the local router and the Mac's DNS resolvers, `1.1.1.1` (Cloudflare) for latency, `captive.apple.com` for sign-in pages, and `speed.cloudflare.com` only for a speed test you ask for. Optional DNS benchmarks query `8.8.8.8` and `9.9.9.9`. The VPN leak test, only when asked, uses bash.ws, Cloudflare, a STUN server and api6.ipify.org. A public-IP lookup uses `cloudflare.com/cdn-cgi/trace` when requested. A host you ask Kilobat to check is contacted directly. Agents may read Kilobat's guides at `kilobat.app/guides/index.json`. Nothing is sent to a Kilobat server. Details: [PRIVACY.md](PRIVACY.md).
+
 [Privacy and network behaviour](PRIVACY.md) · [Security](SECURITY.md) · GPL-3.0.
 
 See the [documentation](https://kilobat.app/agents) or the [skills on skills.sh](https://skills.sh/seifip/kilobat-skills).
