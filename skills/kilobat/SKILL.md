@@ -102,8 +102,10 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | Health of each layer, with advice | `kilobat diagnose --json` | `diagnose_network` |
 | Live per-app traffic, metered flag, profile | `kilobat status --json` | `get_status` |
 | Current Wi-Fi link | `kilobat wifi status --json` | `get_wifi` |
-| Nearby networks and channels | `kilobat scan --json` | `scan_wifi` |
+| Nearby networks and channels, with each access point's beacon (generation, rates, 802.11k/v/r, security, multi-link) | `kilobat scan --json` | `scan_wifi` |
 | Least crowded channel | `kilobat channels --json` | `suggest_wifi_channel` |
+| Each access point's signal over a few minutes (scans briefly take Wi-Fi off its channel) | `kilobat wifi watch --for 2m --json` | `watch_wifi` |
+| On 2.4 GHz while 5 GHz is better, or on a weak access point while a stronger one is in range | `kilobat wifi steering --json` | `get_wifi_steering` |
 | One signal sample (score 0–100) | `kilobat radar --json` | — |
 | Speed and bufferbloat, one connection or four (`--parallel`) | `kilobat speedtest --json [--budget-mb N] [--parallel]` | `run_speedtest` |
 | What differed between two speed tests | `kilobat speed-compare --json` | `compare_speed_tests` |
@@ -146,7 +148,7 @@ Traffic history, network names and rules stay on the Mac. Do not send them anywh
 | A call froze because of another Mac at home | `kilobat household --json` (paired Macs: `live.apps`, `busy`); pairing is only in the app | `get_household` |
 | Device traffic at home, now and today | `kilobat router devices --json` (from the router connected in the app; `router.measures` wholeHome means no per-device counters, so never blame one device for `others`; UniFi clients and RouterOS queues can include LAN, so perDevice is not an internet-only total or a camera upload share); `router connect` prints the steps, never takes a password | `get_home_usage` |
 | Matter, Thread or HomeKit devices won't set up or keep dropping; separate Thread networks; is the network ready for Matter (IPv6, Bonjour, isolation, subnet, 2.4 GHz) | `kilobat smarthome --json` (read-only; never sets up or controls a device) | `check_smart_home` |
-| A route over time, hop by hop like mtr | `kilobat trace <host> --rounds 3`, `route-history --host <host> --json` | `trace_route` (`rounds`), `get_route_history` |
+| A route over time, hop by hop like mtr | `kilobat trace <host> --rounds 3`, `trace <host> --watch --for 2m --json`, `route-history --host <host> --json` | `trace_route` (`rounds`, `protocol`), `watch_route` (ask first; up to 15 min), `get_route_history` (`watch`) |
 | Throughput to a device on the LAN running `iperf3 -s` (ask first) | `kilobat lan-test <host> --json` | `run_lan_test` |
 | Networks and their remembered settings | `kilobat networks --json` | `list_networks` |
 | A profile's rules | `kilobat rules --json [--profile name]` | `list_rules` |

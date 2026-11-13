@@ -15,9 +15,10 @@ Commands need CLI 0.5 (`kilobat --version`); if one is unknown, suggest `brew up
 
 ## 2. How apps without a rule are treated
 
-`kilobat settings new-apps allow|ask|block` (MCP `set_new_app_mode`):
+`kilobat settings new-apps allow|alert|ask|block` (MCP `set_new_app_mode`):
 
 - `allow`: apps without a rule connect. Block rules and blocked hosts still apply.
+- `alert`: as allow, and each new app is listed quietly for review, never notified. `kilobat new-apps --json` (MCP `list_new_apps`) lists them with where they first connected; propose a rule per app with the user's yes.
 - `ask`: an app's first connections are held, and the Kilobat app asks the user to allow or block it, showing its signer, path and destinations. Unanswered connections give up after a minute and the app asks again. If the Kilobat app isn't running, new apps are allowed rather than held.
 - `block`: only apps with an allow rule connect. Good for a phone hotspot or a strict work setup; warn that new apps fail silently until allowed.
 
@@ -27,21 +28,25 @@ Commands need CLI 0.5 (`kilobat --version`); if one is unknown, suggest `brew up
 
 With `new-apps` set to `ask`, `kilobat approvals --json` (MCP `list_approvals`) lists waiting apps: `app` (the rule key), `process`, `path`, `signer`, `signatureValid`, `requests`, `waiting` and `destinations` (`host`, `address`, `port`). It needs the Kilobat app running.
 
-Present each app with who signed it and where it wants to go, then let the user decide. `kilobat deny <app>` (MCP `decide_approval` with `block`) drops the held connections and saves a block rule in the current profile at once; `--minutes N` blocks for a while only. `kilobat approve <app>` doesn't allow anything by itself: Kilobat opens its approval window on that app, marked as requested from the command line, and the person confirms it there (`confirming: true`). Tell the user to look for it. Never encourage allowing an app whose signature isn't valid, or one the user doesn't recognize.
+Present each app with who signed it and where it wants to go, then let the user decide. `kilobat deny <app>` (MCP `decide_approval` with `block`) drops the held connections and saves a block rule in the current profile at once; `--minutes N` blocks for a while only, and `--duration once|until-quit|hour|forever` picks another span (once saves no rule; until-quit ends when that process exits). Each prompt has an `approvalID`; pass it instead of the app id to answer exactly the prompt you showed the user (an answer for a prompt that changed since is refused). A prompt with `site` set is about a new destination of an app that asks about destinations: answer it with its approval id and `--scope host|domain|anywhere` (MCP `decide_approval` `scope`). `kilobat approve <app>` doesn't allow anything by itself: Kilobat opens its approval window on that app, marked as requested from the command line, and the person confirms it there (`confirming: true`). Tell the user to look for it. Never encourage allowing an app whose signature isn't valid, or one the user doesn't recognize.
 
 ## 4. Block or allow a whole app
 
-`kilobat block <id>` or `kilobat allow <id>` (MCP `set_app_rule`), with the `id` from `kilobat status --json` (`apps[].id`: a bundle ID or `process:<name>`). `--minutes N` makes it temporary; `kilobat reset <id>` removes the rule so the app follows the new-app mode.
+`kilobat block <id>` or `kilobat allow <id>` (MCP `set_app_rule`), with the `id` from `kilobat status --json` (`apps[].id`: a bundle ID or `process:<name>`). `--minutes N` makes it temporary; `kilobat reset <id>` removes the rule so the app follows the new-app mode. `--developer` (MCP `developer: true`) saves the rule for everything signed by the app's Team ID instead (`team:<Team ID>`), helpers that appear later included; apps with a rule of their own keep it, and Apple's software is never covered.
+
+To watch one app closely, `kilobat ask-destinations on <id>` (MCP `set_ask_destinations`) makes it ask before reaching a site none of its destination rules cover; it holds only while the Kilobat app runs. Off for every app by default.
 
 ## 5. Block a destination
 
 `kilobat block-host <target>` blocks it for every app; add `--app <id>` to block it for one app only, as a connection rule in the active profile (MCP `block_destination`, with `action: unblock` to undo). A target is a domain (its subdomains are included; `*.example.com` means the same), an IP address or a CIDR range such as `203.0.113.0/24`. Domains match only when macOS gives the filter a hostname; addresses always match.
 
+For finer rules, `kilobat rules add allow|block <id> <domain|IP|CIDR> [--port N] [--protocol tcp|udp] [--direction outgoing|incoming] [--exact] [--minutes N]` (MCP `set_destination_rule`); `--exact` leaves out subdomains, ranges may be IPv6, and `kilobat rules remove <rule-id>` deletes one. To keep a published hosts file or domain list current, `kilobat blocklists add <https-url> --name <name>` (MCP `set_blocklist`) subscribes to it; it is checked daily and blocks for every app, so suggest only lists the user chose. `kilobat blocklists --json` (MCP `get_blocklists`) shows entries, last update and errors.
+
 Before blocking a domain an app needs, check `kilobat access-policy <bundle-id> --json` (MCP `get_access_policy`): when the app declares its connections, `essential` ones and their `denyConsequences` say what breaks. Blocking a CDN or a shared address can affect other apps; prefer a domain or a per-app rule.
 
 ## 6. Check it worked
 
-New connections follow the rule; an existing connection can continue until it reconnects. `kilobat blocked-history` (MCP `list_blocked_connections`) shows what the filter blocked, with the `reason` (app rule, blocklist entry, connection rule, budget, default deny, blocked when asked, or "Updater paused on a metered network" for an updater helper on a hotspot; see `mac-hotspot-data-saver`). `kilobat why <host> --app <id> --json` explains why one app can or can't reach a host, including Kilobat's own rules.
+New connections follow the rule; an existing connection can continue until it reconnects. `kilobat blocked-history` (MCP `list_blocked_connections`) shows what the filter blocked, with the `reason` (app rule, blocklist entry, connection rule, budget, default deny, blocked when asked, or "Updater paused on a metered network" for an updater helper on a hotspot; see `mac-hotspot-data-saver`). `kilobat why <host> --app <id> --json` explains why one app can or can't reach a host, including Kilobat's own rules. `kilobat connections --log --json` (MCP `get_connection_log`) is the last hour of allowed and blocked connections from the running app's memory, browsers left out; `kilobat connections --hits --json` (MCP `get_connection_log` with `hits`) says how often each rule decided a connection today, so unused rules stand out.
 
 When the user asks why Kilobat allowed or blocked something, run `kilobat verdict <host> --app <id> --json` (MCP `explain_verdict`), or `kilobat verdict --blocked 5 --json` for the latest blocked attempts. It lists every rule that matched in the filter's order: `summary` is the deciding one ("Blocked by Protection: … is on the phishing list (…)"), and `rules` with `role: alsoMatched` are rules that applied too but came later, such as an allow rule under a threat or Send later holding an app on a hotspot. Each rule has `change.label` (where to change it in the app) and `change.command` (the CLI command). `recorded: true` means the filter recorded it as it blocked; otherwise it is the rules as they are now. Report the deciding rule first, then what else matched, and propose the change only with the user's yes: changing the deciding rule can let an also-matched rule decide instead.
 

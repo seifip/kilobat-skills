@@ -16,7 +16,7 @@ Kilobat is a macOS network utility. Its CLI (`kilobat`) measures Wi-Fi signal, r
 
 ## Safety: read freely, ask before changing
 
-Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace`, `route-history`, `interfaces`, `ip` (without `--public`, which contacts Cloudflare), `speed-compare`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`, `portal`, `down` (CLI 0.20; asks public status pages only).
+Read-only, run without asking: `diagnose`, `why`, `status`, `scan`, `radar --json`, `report`, `rules`, `profile` (no argument), `limit` (no argument), `dns` (no argument), `dns-benchmark`, `http-check`, `trace` (without `--watch`, which runs for minutes: ask first), `route-history`, `interfaces`, `ip` (without `--public`, which contacts Cloudflare), `speed-compare`, `destinations`, `devices`, `outages`, `speed-history`, `doctor`, `portal`, `down` (CLI 0.20; asks public status pages only).
 
 Ask first, naming the exact change:
 
@@ -130,6 +130,8 @@ Kilobat's site has guides for common macOS networking problems and step-by-step 
 | `diagnose_network` | `kilobat diagnose --json` | No |
 | `get_status` | `kilobat status --json` | No |
 | `scan_wifi` | `kilobat scan --json` | No |
+| `watch_wifi` (`seconds`, `every_seconds`) | `kilobat wifi watch --for 2m --json` | No; scans briefly take Wi-Fi off its channel |
+| `get_wifi_steering` | `kilobat wifi steering --json` | No |
 | `run_speedtest` (`budget_mb`, `parallel`) | `kilobat speedtest --json --budget-mb N [--parallel]` | No, but uses data |
 | `compare_speed_tests` (`first`, `second`) | `kilobat speed-compare [<test> <test>] --json` | No |
 | `get_exit_path` (`public_ip`) | `kilobat ip --json [--public]` | No; `public_ip` contacts Cloudflare |
