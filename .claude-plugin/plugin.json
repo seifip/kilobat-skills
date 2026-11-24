@@ -1,6 +1,6 @@
 {
   "name": "kilobat",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Diagnose slow or flaky internet on a Mac: per-app traffic, Wi-Fi signal, latency, DNS and speed tests. Ten skills that run the Kilobat CLI (brew install seifip/kilobat/kilobat); the setup skill can also connect Kilobat's MCP server.",
   "author": {
     "name": "Kilobat",
